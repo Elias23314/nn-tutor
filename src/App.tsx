@@ -1,5 +1,13 @@
+import { TopBar } from './components/TopBar'
+import { Playground } from './playground/Playground'
+
 function App() {
-  return <h1>Neural Network Tutor</h1>
+  return (
+    <>
+      <TopBar current="Playground" />
+      <Playground />
+    </>
+  )
 }
 
 export default App
