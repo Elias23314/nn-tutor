@@ -4,7 +4,7 @@ import type { Command, Report, Snapshot } from './protocol'
 export type TrainerStatus =
   | { kind: 'loading' }
   | { kind: 'error'; message: string }
-  | { kind: 'ready'; state: Snapshot; samples: Float32Array[] }
+  | { kind: 'ready'; state: Snapshot; samples: Float32Array[]; trainSamples: Float32Array[] }
 
 export type Send = (command: Command) => void
 
@@ -14,7 +14,7 @@ export type Send = (command: Command) => void
  */
 export function useTrainer(initial: Command[] = []) {
   const worker = useRef<Worker | null>(null)
-  const samples = useRef<Float32Array[] | null>(null)
+  const samples = useRef<{ test: Float32Array[]; train: Float32Array[] } | null>(null)
   const [status, setStatus] = useState<TrainerStatus>({ kind: 'loading' })
   const initialCommands = useRef(initial)
 
@@ -23,10 +23,11 @@ export function useTrainer(initial: Command[] = []) {
     worker.current = w
     w.onmessage = (event: MessageEvent<Report>) => {
       const report = event.data
-      if (report.type === 'ready') samples.current = report.samples
+      if (report.type === 'ready') samples.current = { test: report.samples, train: report.trainSamples }
       else if (report.type === 'error') setStatus({ kind: 'error', message: report.message })
       else if (report.type === 'state' && samples.current) {
-        setStatus({ kind: 'ready', state: report.state, samples: samples.current })
+        const { test, train } = samples.current
+        setStatus({ kind: 'ready', state: report.state, samples: test, trainSamples: train })
       }
     }
     w.onerror = (event) => setStatus({ kind: 'error', message: event.message || 'The training worker failed' })

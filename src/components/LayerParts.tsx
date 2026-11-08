@@ -160,6 +160,36 @@ export function SayItCard({
   )
 }
 
+/** "Quick check from the last layer": recall one word from the previous layer's sentence. */
+export function QuickCheck({ before, after, options, answer }: { before: string; after: string; options: string[]; answer: string }) {
+  const [picked, setPicked] = useState<string | null>(null)
+  const right = picked === answer
+  return (
+    <div className="retr" role="group" aria-label="Quick check from the last layer">
+      <span className="k">Quick check from the last layer</span>
+      <span>
+        {before}___{after}
+      </span>
+      <div className="chips">
+        {options.map((o) => (
+          <button
+            key={o}
+            className={`chip${picked === o && right ? ' right' : ''}`}
+            aria-pressed={picked === o}
+            disabled={right}
+            onClick={() => setPicked(o)}
+          >
+            {o}
+          </button>
+        ))}
+      </div>
+      <span className="small" aria-live="polite">
+        {picked === null ? '' : right ? 'Answered' : 'Not quite. Try another.'}
+      </span>
+    </div>
+  )
+}
+
 export function LockIcon({ color = 'var(--ink)' }: { color?: string }) {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">

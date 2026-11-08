@@ -56,7 +56,7 @@ export interface Snapshot {
 
 export type Report =
   | { type: 'loading' }
-  /** samples[d]: the first test digit d, for showing on arrival. */
-  | { type: 'ready'; samples: Float32Array[] }
+  /** samples[d]: the first test digit d; trainSamples[d]: the first training digit d. */
+  | { type: 'ready'; samples: Float32Array[]; trainSamples: Float32Array[] }
   | { type: 'state'; state: Snapshot }
   | { type: 'error'; message: string }

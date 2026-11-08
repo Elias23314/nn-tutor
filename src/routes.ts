@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 
 /** Pages that exist so far, by their hash (#/layer-1). */
-export type Route = 'layer-1' | 'playground'
+export type Route = 'layer-1' | 'layer-2' | 'playground'
 
-export const ROUTES: Route[] = ['layer-1', 'playground']
+export const ROUTES: Route[] = ['layer-1', 'layer-2', 'playground']
 export const DEFAULT_ROUTE: Route = 'layer-1'
 
 export const href = (route: Route) => `#/${route}`

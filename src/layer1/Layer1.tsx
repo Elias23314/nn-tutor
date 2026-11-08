@@ -158,9 +158,9 @@ function Ready({ state, samples, send }: { state: Snapshot; samples: Float32Arra
         <a className="btn sec" href={href('playground')}>
           Try it in the playground
         </a>
-        <button className="btn" disabled title="Not built yet">
-          Go deeper: layer 2 (coming soon)
-        </button>
+        <a className="btn" href={href('layer-2')}>
+          Go deeper: layer 2
+        </a>
       </div>
     </>
   )

@@ -5,8 +5,8 @@ import { thousands } from './connection'
 const BLUE = [0x25, 0x63, 0xeb]
 const ORANGE = [0xc2, 0x41, 0x0c]
 
-/** One neuron's 784 incoming weights as a picture: blue excites, orange inhibits. */
-function WeightCanvas({ weights, max, name }: { weights: Float64Array; max: number; name: string }) {
+/** One neuron's 784 incoming weights (or changes to them) as a picture: blue excites, orange inhibits. */
+export function WeightCanvas({ weights, max, name }: { weights: Float64Array; max: number; name: string }) {
   const ref = useRef<HTMLCanvasElement>(null)
   useEffect(() => {
     const ctx = ref.current?.getContext('2d')

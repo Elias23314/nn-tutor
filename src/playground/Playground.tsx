@@ -10,7 +10,7 @@ import { OutputBars } from './OutputBars'
 import { ThingsToTry } from './ThingsToTry'
 import { TrainingExamples } from './TrainingExamples'
 import { WeightPictures } from './WeightPictures'
-import { G_TO_7, fmt, pct, thousands, type Connection } from './connection'
+import { G_TO_7, connectionLabel, fmt, pct, thousands, type Connection } from './connection'
 import type { Snapshot, Speed } from './protocol'
 import { useTrainer, type Send } from './useTrainer'
 import './playground.css'
@@ -202,7 +202,13 @@ function Ready({ state, sample7, send }: { state: Snapshot; sample7: Float32Arra
         </div>
 
         <div className="stack">
-          <NetworkDiagram network={state.network} fwd={fwd} selected={selected} onSelect={setSelected} />
+          <NetworkDiagram
+            network={state.network}
+            fwd={fwd}
+            selected={selected}
+            onSelect={setSelected}
+            caption={`Showing your digit. ${connectionLabel(selected)} is selected (click any line to pick another). Showing the 3 strongest connections into each neuron.`}
+          />
           <WeightPictures network={state.network} round={state.round} />
         </div>
 

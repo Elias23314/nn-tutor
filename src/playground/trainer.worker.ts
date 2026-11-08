@@ -159,11 +159,10 @@ async function start() {
   try {
     const mnist = await loadMnist()
     trainer = new Trainer(mnist)
-    // The first test example of each digit, for pages to show on arrival.
-    const samples = Array.from({ length: 10 }, (_, d) =>
-      Float32Array.from(getSample(mnist.test, mnist.test.labels.indexOf(d)).x),
-    )
-    post({ type: 'ready', samples })
+    // The first example of each digit, for pages to show or replay.
+    const firstOf = (data: typeof mnist.test) =>
+      Array.from({ length: 10 }, (_, d) => Float32Array.from(getSample(data, data.labels.indexOf(d)).x))
+    post({ type: 'ready', samples: firstOf(mnist.test), trainSamples: firstOf(mnist.train) })
     report(trainer)
     for (const cmd of queue.splice(0)) handle(trainer, cmd)
   } catch (error) {
