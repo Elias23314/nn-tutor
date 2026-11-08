@@ -25,26 +25,34 @@ function WeightCanvas({ weights, max, name }: { weights: Float64Array; max: numb
   )
 }
 
-export function WeightPictures({ network, round }: { network: Network; round: number }) {
+/** The 16 hidden-layer-1 neurons' connections from the pixels, one picture each. */
+export function WeightGrid({ network, captions = true, scale }: { network: Network; captions?: boolean; scale?: number }) {
   const layer = network.layers[0]
   const rows = Array.from({ length: layer.outSize }, (_, j) => layer.weights.subarray(j * PIXELS, (j + 1) * PIXELS))
   // One shared scale, so pictures can be compared with each other.
   let max = 1e-9
-  for (const w of layer.weights) max = Math.max(max, Math.abs(w))
+  if (scale) max = scale
+  else for (const w of layer.weights) max = Math.max(max, Math.abs(w))
+  return (
+    <div className="wgrid">
+      {rows.map((w, j) => (
+        <div key={j}>
+          <WeightCanvas weights={w} max={max} name={neuronName(1, j)} />
+          {captions && <div className="cap">{neuronName(1, j)}</div>}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export function WeightPictures({ network, round }: { network: Network; round: number }) {
   return (
     <div className="panel">
       <div className="ptitle">
         <span className="h3">What hidden layer 1 responds to</span>
         <span className="small">{round === 0 ? 'Before practice' : `After ${thousands(round)} rounds`}</span>
       </div>
-      <div className="wgrid">
-        {rows.map((w, j) => (
-          <div key={j}>
-            <WeightCanvas weights={w} max={max} name={neuronName(1, j)} />
-            <div className="cap">{neuronName(1, j)}</div>
-          </div>
-        ))}
-      </div>
+      <WeightGrid network={network} />
       <p className="small" style={{ marginTop: 10 }}>
         Each square is one neuron&rsquo;s 784 connections from the pixels. Blue pixels excite it, orange pixels inhibit it.
       </p>

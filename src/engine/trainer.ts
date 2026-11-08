@@ -44,6 +44,19 @@ export interface TestResult {
   silentHidden2: number
   /** Average of the largest output across test digits. Near 0 means it has stopped firing. */
   meanTopOutput: number
+  /** Its most common mistake, shown by the test digit it got wrong most confidently. */
+  topMistake: Mistake | null
+}
+
+export interface Mistake {
+  actual: number
+  said: number
+  /** How many test digits it made this same mistake on. */
+  count: number
+  /** The most confident example of it. */
+  image: Float32Array
+  confidence: number
+  outputForActual: number
 }
 
 export interface Collapse {
@@ -68,6 +81,8 @@ export class Trainer {
   round = 0
   losses: number[] = []
   accuracyHistory: Point[] = []
+  /** Accuracy on each digit's test examples over time: digitHistory[d]. */
+  digitHistory: Point[][] = []
   lastTest: TestResult | null = null
   /** Goes up on every reset. */
   session = 0
@@ -93,6 +108,7 @@ export class Trainer {
     this.etaAtRound = []
     this.order = batchOrder(this.train.count, BATCH_SIZE, this.seed)
     this.accuracyHistory = []
+    this.digitHistory = Array.from({ length: DIGITS }, () => [])
     this.lastTest = null
     this.test()
   }
@@ -148,6 +164,8 @@ export class Trainer {
     const { test } = this.mnist
     const confusion = Array.from({ length: DIGITS }, () => new Array<number>(DIGITS).fill(0))
     const hidden2Fired = new Array<boolean>(this.network.layers[1].outSize).fill(false)
+    // For each (actual, said) mistake, the test digit it was most confident about.
+    const surest = new Array<{ k: number; confidence: number; outputForActual: number } | null>(DIGITS * DIGITS).fill(null)
     let correct = 0
     let topSum = 0
     for (let k = 0; k < test.count; k++) {
@@ -156,12 +174,30 @@ export class Trainer {
       const guess = predict(fwd.yHat)
       confusion[label][guess]++
       if (guess === label) correct++
+      else {
+        const slot = label * DIGITS + guess
+        const best = surest[slot]
+        if (!best || fwd.yHat[guess] > best.confidence) {
+          surest[slot] = { k, confidence: fwd.yHat[guess], outputForActual: fwd.yHat[label] }
+        }
+      }
       topSum += fwd.yHat[guess]
       fwd.layers[1].a.forEach((a, j) => {
         if (a > 0) hidden2Fired[j] = true
       })
     }
     const perDigit = confusion.map((row, d) => row[d] / Math.max(1, row.reduce((a, b) => a + b, 0)))
+
+    let topMistake: Mistake | null = null
+    confusion.forEach((row, actual) =>
+      row.forEach((count, said) => {
+        const best = surest[actual * DIGITS + said]
+        if (actual === said || !best || (topMistake && count <= topMistake.count)) return
+        const image = Float32Array.from(getSample(test, best.k).x)
+        topMistake = { actual, said, count, image, confidence: best.confidence, outputForActual: best.outputForActual }
+      }),
+    )
+
     const result: TestResult = {
       round: this.round,
       accuracy: correct / test.count,
@@ -169,11 +205,11 @@ export class Trainer {
       confusion,
       silentHidden2: hidden2Fired.filter((f) => !f).length,
       meanTopOutput: topSum / test.count,
+      topMistake,
     }
     this.lastTest = result
-    const last = this.accuracyHistory.at(-1)
-    if (last?.round === this.round) this.accuracyHistory[this.accuracyHistory.length - 1] = { round: this.round, value: result.accuracy }
-    else this.accuracyHistory.push({ round: this.round, value: result.accuracy })
+    record(this.accuracyHistory, this.round, result.accuracy)
+    perDigit.forEach((p, d) => record(this.digitHistory[d], this.round, p))
     return result
   }
 
@@ -203,6 +239,20 @@ export class Trainer {
   labelCounts(): number[] {
     return labelCounts(this.train)
   }
+}
+
+/** Adds a point, replacing the last one if it's for the same round. */
+function record(points: Point[], round: number, value: number) {
+  if (points.at(-1)?.round === round) points[points.length - 1] = { round, value }
+  else points.push({ round, value })
+}
+
+/**
+ * The first round at which each digit was read correctly at least `threshold` of the time,
+ * or null if it hasn't been yet.
+ */
+export function firstReached(digitHistory: Point[][], threshold = 0.8): (number | null)[] {
+  return digitHistory.map((points) => points.find((p) => p.value >= threshold)?.round ?? null)
 }
 
 /** Removes digits and mislabels a fraction of one digit (the same examples every time for a seed). */

@@ -23,6 +23,7 @@ let pending = 0
 let speed: Speed = 'normal'
 let running = false
 let lastTestRound = 0
+let testEvery: number | null = null
 const queue: Command[] = []
 /** The experiment being run, and the results of recent ones that finished. */
 let experiment: { id: number; probe?: Float32Array } | null = null
@@ -56,6 +57,7 @@ function snapshot(t: Trainer): Snapshot {
     recentLoss: t.recentLoss,
     lossHistory: t.lossHistory(),
     accuracyHistory: t.accuracyHistory,
+    digitHistory: t.digitHistory,
     lastTest: t.lastTest,
     collapse: t.collapse(),
     labelCounts: t.labelCounts(),
@@ -85,7 +87,7 @@ async function run(t: Trainer) {
     do {
       t.practiceOnce()
       if (pending > 0) pending--
-      if (t.round - lastTestRound >= pace.testEvery(t.round)) testNow(t)
+      if (t.round - lastTestRound >= (testEvery ?? pace.testEvery(t.round))) testNow(t)
     } while ((playing || pending > 0) && performance.now() - start < pace.sliceMs)
     if (!playing && pending === 0 && lastTestRound !== t.round) testNow(t)
     if (pending === 0) finishExperiment(t)
@@ -121,6 +123,9 @@ function handle(t: Trainer, cmd: Command) {
     case 'setSpeed':
       speed = cmd.speed
       break
+    case 'setTestEvery':
+      testEvery = cmd.rounds
+      break
     case 'setExamples':
       playing = false
       pending = 0
@@ -154,9 +159,11 @@ async function start() {
   try {
     const mnist = await loadMnist()
     trainer = new Trainer(mnist)
-    // A 7 from the test digits, so the pad isn't empty on arrival.
-    const first7 = mnist.test.labels.indexOf(7)
-    post({ type: 'ready', sample7: Float32Array.from(getSample(mnist.test, first7).x) })
+    // The first test example of each digit, for pages to show on arrival.
+    const samples = Array.from({ length: 10 }, (_, d) =>
+      Float32Array.from(getSample(mnist.test, mnist.test.labels.indexOf(d)).x),
+    )
+    post({ type: 'ready', samples })
     report(trainer)
     for (const cmd of queue.splice(0)) handle(trainer, cmd)
   } catch (error) {

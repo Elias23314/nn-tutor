@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { loadMnist, type Mnist } from './mnist'
-import { Trainer, applyChanges } from './trainer'
+import { Trainer, applyChanges, firstReached } from './trainer'
 
 const dir = fileURLToPath(new URL('../../public/mnist/', import.meta.url))
 let mnist: Mnist
@@ -26,6 +26,33 @@ describe('Trainer', () => {
     t.practiceOnce()
     expect(t.round).toBe(2)
     expect(t.recentLoss).toBeGreaterThan(0)
+  })
+
+  it('tracks each digit, and finds when each first reaches 80%', () => {
+    const t = new Trainer(mnist)
+    for (let r = 0; r < 600; r++) {
+      t.practiceOnce()
+      if (t.round % 100 === 0) t.test()
+    }
+    expect(t.digitHistory).toHaveLength(10)
+    expect(t.digitHistory[0].map((p) => p.round)).toEqual([0, 100, 200, 300, 400, 500, 600])
+    const reached = firstReached(t.digitHistory)
+    expect(reached.filter((r) => r !== null).length).toBeGreaterThan(5)
+    for (const r of reached) if (r !== null) expect(r % 100).toBe(0)
+  })
+
+  it('finds its most common mistake and its most confident example', () => {
+    const t = new Trainer(mnist)
+    for (let r = 0; r < 600; r++) t.practiceOnce()
+    const { topMistake, confusion } = t.test()
+    expect(topMistake).not.toBeNull()
+    const m = topMistake!
+    expect(m.actual).not.toBe(m.said)
+    expect(m.count).toBe(confusion[m.actual][m.said])
+    const offDiagonal = confusion.flatMap((row, a) => row.filter((_, s) => s !== a))
+    expect(m.count).toBe(Math.max(...offDiagonal))
+    expect(m.image).toHaveLength(784)
+    expect(m.confidence).toBeGreaterThan(m.outputForActual)
   })
 
   it('collapses at learning rate 40, as the mockup describes', () => {

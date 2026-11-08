@@ -1,14 +1,16 @@
-const RUNGS = [
+import { href, type Route } from '../routes'
+
+const RUNGS: { title: string; meta: string; n?: number; route?: Route }[] = [
   { title: 'Start here', meta: 'Why it matters' },
-  { n: 1, title: 'What it does', meta: 'No math' },
+  { n: 1, title: 'What it does', meta: 'No math', route: 'layer-1' },
   { n: 2, title: 'How it works', meta: 'No math' },
   { n: 3, title: 'With numbers', meta: 'Arithmetic' },
   { n: 4, title: 'The math', meta: 'Calc I' },
-  { title: 'Playground', meta: 'Any depth' },
+  { title: 'Playground', meta: 'Any depth', route: 'playground' },
 ]
 
-/** The depth ladder from the mockups. Only the playground is built so far. */
-export function TopBar({ current }: { current: string }) {
+/** The depth ladder from the mockups. Rungs without a page yet are shown but not linked. */
+export function TopBar({ current }: { current: Route }) {
   return (
     <header className="topbar">
       <div className="brand">
@@ -17,21 +19,28 @@ export function TopBar({ current }: { current: string }) {
       </div>
       <nav className="ladder" aria-label="Depth">
         {RUNGS.map((r, i) => {
-          const isCurrent = r.title === current
+          const isCurrent = r.route === current
+          const body = (
+            <>
+              <div className="rt">
+                {r.n && <span className="n">{r.n}</span>}
+                {r.title}
+              </div>
+              <div className="m">{r.meta}</div>
+            </>
+          )
           return (
             <div key={r.title} style={{ display: 'flex', alignItems: 'center' }}>
               {i > 0 && <div className="rail" />}
-              <div
-                className={`rung${isCurrent ? ' cur' : ' soon'}`}
-                aria-current={isCurrent ? 'page' : undefined}
-                title={isCurrent ? undefined : 'Not built yet'}
-              >
-                <div className="rt">
-                  {r.n && <span className="n">{r.n}</span>}
-                  {r.title}
+              {r.route ? (
+                <a className={`rung${isCurrent ? ' cur' : ''}`} href={href(r.route)} aria-current={isCurrent ? 'page' : undefined}>
+                  {body}
+                </a>
+              ) : (
+                <div className="rung soon" title="Not built yet">
+                  {body}
                 </div>
-                <div className="m">{r.meta}</div>
-              </div>
+              )}
             </div>
           )
         })}

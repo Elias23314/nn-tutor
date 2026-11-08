@@ -140,6 +140,13 @@ button:disabled {
   color: var(--muted);
   white-space: nowrap;
 }
+a.rung {
+  color: inherit;
+  text-decoration: none;
+}
+a.rung:hover:not(.cur) {
+  border-color: var(--ink);
+}
 .rung.cur {
   background: var(--ink);
   border-color: var(--ink);

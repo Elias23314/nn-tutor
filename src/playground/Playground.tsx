@@ -12,7 +12,7 @@ import { TrainingExamples } from './TrainingExamples'
 import { WeightPictures } from './WeightPictures'
 import { G_TO_7, fmt, pct, thousands, type Connection } from './connection'
 import type { Snapshot, Speed } from './protocol'
-import { useTrainer } from './useTrainer'
+import { useTrainer, type Send } from './useTrainer'
 import './playground.css'
 
 const ETAS = [0.5, 2, 10, 40]
@@ -37,7 +37,7 @@ export function Playground() {
           Couldn&rsquo;t start the network: {status.message}
         </p>
       )}
-      {status.kind === 'ready' && <Ready state={status.state} sample7={status.sample7} send={send} />}
+      {status.kind === 'ready' && <Ready state={status.state} sample7={status.samples[7]} send={send} />}
     </main>
   )
 }
@@ -71,7 +71,7 @@ function Stats({ state }: { state: Snapshot }) {
   )
 }
 
-function Ready({ state, sample7, send }: { state: Snapshot; sample7: Float32Array; send: ReturnType<typeof useTrainer>['send'] }) {
+function Ready({ state, sample7, send }: { state: Snapshot; sample7: Float32Array; send: Send }) {
   const [padImage, setPadImage] = useState<Float32Array | null>(sample7)
   const [image, setImage] = useState<Float32Array>(sample7)
   const [upsideDown, setUpsideDown] = useState(false)

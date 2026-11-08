@@ -38,3 +38,12 @@ export const fmt = (v: number, digits = 3) => {
 export const pct = (v: number) => `${(v * 100).toFixed(1)}%`
 
 export const thousands = (v: number) => v.toLocaleString('en-US')
+
+/**
+ * A color scale for weight pictures that isn't washed out by a few extreme weights:
+ * the 99th percentile of |w|, but at least `floor` so untrained noise stays faint.
+ */
+export function weightScale(network: Network, floor = 0.3): number {
+  const sorted = Float64Array.from(network.layers[0].weights, Math.abs).sort()
+  return Math.max(floor, sorted[Math.floor(sorted.length * 0.99)])
+}

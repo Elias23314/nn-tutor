@@ -11,6 +11,8 @@ export type Command =
   | { type: 'reset' }
   | { type: 'setEta'; eta: number }
   | { type: 'setSpeed'; speed: Speed }
+  /** Score the test digits every `rounds` rounds instead of the speed's own pace. */
+  | { type: 'setTestEvery'; rounds: number | null }
   | { type: 'setExamples'; changes: ExampleChanges }
   | { type: 'setWeight'; layer: number; from: number; to: number; value: number }
   /**
@@ -41,6 +43,8 @@ export interface Snapshot {
   recentLoss: number | null
   lossHistory: Point[]
   accuracyHistory: Point[]
+  /** Accuracy on each digit's test examples over time. */
+  digitHistory: Point[][]
   lastTest: TestResult | null
   collapse: Collapse | null
   labelCounts: number[]
@@ -52,6 +56,7 @@ export interface Snapshot {
 
 export type Report =
   | { type: 'loading' }
-  | { type: 'ready'; sample7: Float32Array }
+  /** samples[d]: the first test digit d, for showing on arrival. */
+  | { type: 'ready'; samples: Float32Array[] }
   | { type: 'state'; state: Snapshot }
   | { type: 'error'; message: string }
