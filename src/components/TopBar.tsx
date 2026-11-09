@@ -4,7 +4,7 @@ const RUNGS: { title: string; meta: string; n?: number; route?: Route }[] = [
   { title: 'Start here', meta: 'Why it matters', route: 'start' },
   { n: 1, title: 'What it does', meta: 'No math', route: 'layer-1' },
   { n: 2, title: 'How it works', meta: 'No math', route: 'layer-2' },
-  { n: 3, title: 'With numbers', meta: 'Arithmetic' },
+  { n: 3, title: 'With numbers', meta: 'Arithmetic', route: 'layer-3' },
   { n: 4, title: 'The math', meta: 'Calc I' },
   { title: 'Playground', meta: 'Any depth', route: 'playground' },
 ]

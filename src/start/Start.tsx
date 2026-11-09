@@ -44,7 +44,7 @@ const RUNGS: Rung[] = [
     name: 'With numbers',
     tag: 'Arithmetic',
     blurb: 'Nudge one connection, measure the mistake, and take a step.',
-    route: null,
+    route: 'layer-3',
   },
   {
     n: '4',
@@ -84,8 +84,7 @@ const QUESTIONS = [
 
 export function Start() {
   const [calculus, setCalculus] = useState<'no' | 'yes' | null>(null)
-  // Layer 2 is the deepest finished layer; once layers 3 and 4 exist, "yes" should point at layer 3.
-  const recommended: Route = calculus === 'yes' ? 'layer-2' : 'layer-1'
+  const recommended: Route = calculus === 'yes' ? 'layer-3' : 'layer-1'
 
   return (
     <main className="layer start">
@@ -174,7 +173,7 @@ export function Start() {
           </div>
           <p className="small" style={{ fontSize: 15 }} aria-live="polite">
             {calculus === 'yes'
-              ? 'Layers 3 and 4 use arithmetic and Calc I, and they’re still being built. Until then, layer 2 is the deepest finished layer. Starting at layer 1 still gives you the whole story.'
+              ? 'Try layer 3: it uses arithmetic, and layer 4 (Calc I) is still being built. Starting at layer 1 still gives you the whole story.'
               : calculus === 'no'
                 ? 'We’ll suggest layer 1. No math needed: you’ll watch it practice and make predictions. You can jump to any layer from the ladder at the top of every page.'
                 : 'Pick one and we’ll suggest a layer. You can jump to any layer from the ladder at the top of every page.'}

@@ -102,12 +102,27 @@ interface Props {
    * colored and the ones it leaves alone (gradient 0) are gray.
    */
   changed?: Gradients | null
+  /** Legend label for the gray connections when `changed` is given. */
+  unchangedLabel?: string
+  /** What "Describe this" says about the colored and gray connections when `changed` is given. */
+  changedDescription?: string
   /** Panel heading; null for none. */
   title?: string | null
   caption: ReactNode
 }
 
-export function NetworkDiagram({ network, fwd, selected = null, onSelect, top = TOP, changed = null, title = 'The network', caption }: Props) {
+export function NetworkDiagram({
+  network,
+  fwd,
+  selected = null,
+  onSelect,
+  top = TOP,
+  changed = null,
+  unchangedLabel = 'doesn’t change',
+  changedDescription,
+  title = 'The network',
+  caption,
+}: Props) {
   const [describe, setDescribe] = useState(false)
   const lines = useMemo(() => strongestLines(network, fwd, top, changed !== null), [network, fwd, top, changed])
   const selectedLine = selected ? lineFor(network, fwd, selected) : null
@@ -147,7 +162,7 @@ export function NetworkDiagram({ network, fwd, selected = null, onSelect, top = 
           strokeWidth={10}
           onClick={onSelect && (() => onSelect(l.c))}
         >
-          <title>{`${connectionLabel(l.c)}: ${changed ? (isChanged(l.c) ? 'changes in this correction' : 'unchanged') : `pushes ${fmt(l.push)}`}`}</title>
+          <title>{`${connectionLabel(l.c)}: ${changed ? (isChanged(l.c) ? 'changes' : unchangedLabel) : `pushes ${fmt(l.push)}`}`}</title>
         </line>
       </g>
     )
@@ -260,7 +275,7 @@ export function NetworkDiagram({ network, fwd, selected = null, onSelect, top = 
             <svg width="34" height="12" aria-hidden="true">
               <line x1="1" y1="6" x2="33" y2="6" stroke="#C9CBCF" strokeWidth="3" />
             </svg>
-            doesn&rsquo;t change
+            {unchangedLabel}
           </span>
         </div>
       )}
@@ -279,7 +294,7 @@ export function NetworkDiagram({ network, fwd, selected = null, onSelect, top = 
           hidden layer 2. Its strongest output is {ranked[0][0]} ({fmt(ranked[0][1], 2)}), then {ranked[1][0]} (
           {fmt(ranked[1][1], 2)}).{' '}
           {changed &&
-            `This correction changes the connections into the ${firingCounts[0]} firing neurons of hidden layer 1 from inked pixels, and leaves every connection that starts or ends at a silent neuron alone.`}
+            `${changedDescription ?? `This correction changes the connections into the ${firingCounts[0]} firing neurons of hidden layer 1 from inked pixels, and leaves every connection that starts or ends at a silent neuron alone.`} `}
           {selected && selectedLine && (
             <>
               {connectionLabel(selected)} has strength {fmt(strength(network, selected))} and{' '}

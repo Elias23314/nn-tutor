@@ -195,9 +195,9 @@ function Ready({ example }: { example: Float32Array }) {
         <a className="btn sec" href={href('layer-1')}>
           Back to layer 1
         </a>
-        <button className="btn" disabled title="Not built yet">
-          Go deeper: layer 3 (coming soon)
-        </button>
+        <a className="btn" href={href('layer-3')}>
+          Go deeper: layer 3 zooms in on one connection
+        </a>
       </div>
     </>
   )

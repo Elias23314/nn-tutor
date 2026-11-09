@@ -7,7 +7,7 @@ export interface Connection {
   to: number
 }
 
-/** G → 7, the connection layers 3 and 4 focus on. */
+/** G → 7, the playground's starting selection. Layer 3 picks its own focus from the example. */
 export const G_TO_7: Connection = { layer: 2, from: 6, to: 7 }
 
 export function sourceName(c: Connection): string {
