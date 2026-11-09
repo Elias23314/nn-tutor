@@ -150,7 +150,7 @@ function Ready({ example }: { example: Float32Array }) {
           </section>
 
           {locked ? (
-            <ByHand name={name} w={w} w0={w0} setW={setW} now={now} start={start} />
+            <ByHand name={name} source={source} firing={firing} w={w} w0={w0} setW={setW} now={now} start={start} />
           ) : (
             <div className="panel">
               <div className="h3">Try it by hand</div>
@@ -180,7 +180,7 @@ function Ready({ example }: { example: Float32Array }) {
                 setW(w0)
                 setSteps(0)
               }}
-              atStart={w === w0}
+              atStart={Math.abs(w - w0) < 1e-9}
             />
           </div>
           <div className="sec">
@@ -220,6 +220,8 @@ type Measured = ReturnType<typeof measure>
 
 function ByHand({
   name,
+  source,
+  firing,
   w,
   w0,
   setW,
@@ -227,6 +229,8 @@ function ByHand({
   start,
 }: {
   name: string
+  source: string
+  firing: number
   w: number
   w0: number
   setW: (w: number) => void
@@ -234,66 +238,95 @@ function ByHand({
   start: Measured
 }) {
   const y7 = now.fwd.yHat[LABEL]
-  const round = (v: number) => Math.round(v * 1000) / 1000
+  const y0 = start.fwd.yHat[LABEL]
+  const push = firing * w
+  const push0 = firing * w0
+  // Keep + and − on a grid of whole nudges from the starting strength, so coming back lands exactly on it.
+  const snap = (v: number) => w0 + Math.round((v - w0) / NUDGE) * NUDGE
+  const moved = Math.abs(w - w0) > 1e-9
+  const stronger = w > w0
+  const better = now.mistake < start.mistake
+  const box = (label: string, value: string, changed = false, goal?: string) => (
+    <div className={`fbox${changed ? ' changed' : ''}`}>
+      <span className="fl">{label}</span>
+      <span className="fv mono">{value}</span>
+      {goal && <span className="fl">{goal}</span>}
+    </div>
+  )
   return (
     <div className="panel">
       <div className="ptitle">
         <span className="h3">Try it by hand first</span>
-        {w !== w0 && (
+        {moved && (
           <button className="lnk" style={{ fontSize: 14 }} onClick={() => setW(w0)}>
             Put it back
           </button>
         )}
       </div>
-      <div className="hand">
-        <button className="btn sec sm" aria-label={`Weaken ${name} by ${NUDGE}`} onClick={() => setW(round(w - NUDGE))}>
+      <p className="body">
+        This number is the <b>strength</b> of the connection from neuron {source} to the {LABEL} output: how much of{' '}
+        {source}&rsquo;s firing gets passed on. {source} fires at <span className="mono">{fmt(firing, 2)}</span>, and the
+        connection adds firing × strength to the {LABEL} output. Change it and watch the effect travel through:
+      </p>
+
+      <div className="flow" aria-live="polite">
+        {box(`${source} fires`, fmt(firing, 2))}
+        <span className="fop">×</span>
+        {box('strength', fmt(w), moved)}
+        <span className="fop">=</span>
+        {box(`push into ${LABEL}`, fmt(push), moved)}
+        <span className="fop">→</span>
+        {box(`${LABEL} output`, fmt(y7, 3), moved, 'goal 1')}
+        <span className="fop">→</span>
+        {box('mistake', fmt(now.mistake, 5), moved)}
+      </div>
+
+      <div className="hand" style={{ marginTop: 16 }}>
+        <button className="btn sec sm" aria-label={`Weaken ${name} by ${NUDGE}`} onClick={() => setW(snap(w - NUDGE))}>
           −
         </button>
         <div className="hand-val">
           <span className="mono">{fmt(w)}</span>
           <span className="small">Strength of {name}</span>
         </div>
-        <button className="btn sec sm" aria-label={`Strengthen ${name} by ${NUDGE}`} onClick={() => setW(round(w + NUDGE))}>
+        <button className="btn sec sm" aria-label={`Strengthen ${name} by ${NUDGE}`} onClick={() => setW(snap(w + NUDGE))}>
           +
         </button>
       </div>
       <input
         className="hand-range"
         type="range"
-        min={round(w0 - 2)}
-        max={round(w0 + 4)}
+        min={w0 - 2}
+        max={w0 + 4}
         step={NUDGE}
         value={w}
         aria-label={`Strength of ${name}`}
         onChange={(e) => setW(Number(e.target.value))}
       />
-      <div className="kv">
-        <span>{LABEL} output</span>
-        <span>
-          <span className="m">{fmt(y7, 3)}</span> <span className="small">goal 1</span>
-        </span>
-      </div>
-      <div className="kv">
-        <span>Mistake</span>
-        <span>
-          <span className="m">{fmt(now.mistake, 5)}</span> <span className="small">average of ten squared gaps</span>
-        </span>
-      </div>
-      <p className="body" style={{ marginTop: 12 }} aria-live="polite">
-        {w === w0 ? (
+
+      <p className="body" style={{ marginTop: 8 }} aria-live="polite">
+        {!moved ? (
           <>
-            Nudge it from <span className="mono">{fmt(w0)}</span> to <span className="mono">{fmt(w0 + NUDGE)}</span> and
-            the mistake goes from <span className="mono">{fmt(start.mistake, 5)}</span> to{' '}
+            Try <b>+</b>: a stronger connection passes more of {source}&rsquo;s firing into the {LABEL} output. Nudging it
+            from <span className="mono">{fmt(w0)}</span> to <span className="mono">{fmt(w0 + NUDGE)}</span> takes the
+            mistake from <span className="mono">{fmt(start.mistake, 5)}</span> to{' '}
             <span className="mono">{fmt(start.nudged, 5)}</span>.
           </>
         ) : (
           <>
-            You moved it from <span className="mono">{fmt(w0)}</span> to <span className="mono">{fmt(w)}</span>, and the
-            mistake went from <span className="mono">{fmt(start.mistake, 5)}</span> to{' '}
-            <span className="mono">{fmt(now.mistake, 5)}</span>
-            {now.mistake < start.mistake ? ': smaller.' : now.mistake > start.mistake ? ': bigger.' : '.'}
+            {stronger ? 'Stronger' : 'Weaker'}: {source} now pushes <span className="mono">{fmt(push)}</span> into the{' '}
+            {LABEL} output instead of <span className="mono">{fmt(push0)}</span>, so the {LABEL} output went{' '}
+            {y7 > y0 ? 'up' : 'down'} from <span className="mono">{fmt(y0, 3)}</span> to{' '}
+            <span className="mono">{fmt(y7, 3)}</span>, {y7 > y0 ? 'closer to' : 'further from'} its goal of 1. The mistake
+            went {better ? 'down' : 'up'} from <span className="mono">{fmt(start.mistake, 5)}</span> to{' '}
+            <span className="mono">{fmt(now.mistake, 5)}</span>: {better ? 'better.' : 'worse.'}
           </>
         )}
+      </p>
+      <p className="bigger">
+        <b>The bigger picture:</b> this is just 1 of the network&rsquo;s 13,002 numbers. Learning is what you&rsquo;re
+        doing here, done automatically for every one of them: find which direction makes the mistake smaller, and take a
+        step that way. The rest of this layer works out how big that step should be.
       </p>
     </div>
   )

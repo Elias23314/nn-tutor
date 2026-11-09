@@ -115,7 +115,7 @@ interface Props {
   changedDescription?: string
   /** More connections to emphasize, drawn like `selected`: a path through the network, say. */
   extra?: Connection[]
-  /** Nodes to ring in blue. */
+  /** Nodes to ring in blue. A label can be split over lines with \n; outputs have room for about 14 characters a line. */
   marks?: Mark[]
   /** Fade every connection except the emphasized ones. */
   dimOthers?: boolean
@@ -296,7 +296,11 @@ export function NetworkDiagram({
                   strokeWidth={4}
                   paintOrder="stroke"
                 >
-                  {m.label}
+                  {m.label.split('\n').map((line, li, all) => (
+                    <tspan key={li} x={out ? cx + 24 : cx - 16} dy={li === 0 ? -((all.length - 1) * 14) / 2 : 14}>
+                      {line}
+                    </tspan>
+                  ))}
                 </text>
               )}
             </g>

@@ -86,3 +86,51 @@
     gap: 2px;
   }
 }
+
+/* Try it by hand: what the strength changes, live. */
+.flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+}
+.fbox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--soft);
+  min-width: 64px;
+}
+.fbox .fl {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.fbox .fv {
+  font-size: 15px;
+  font-weight: 600;
+}
+.fbox.changed {
+  border-color: var(--excite);
+  background: #eef3fe;
+}
+.fbox.changed .fv {
+  color: var(--excite);
+}
+.fop {
+  color: var(--muted);
+  font-size: 15px;
+}
+.bigger {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line-2);
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}

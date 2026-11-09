@@ -176,3 +176,71 @@
   color: var(--muted);
   margin-left: 2px;
 }
+
+/* "Read the formula" walkthrough. */
+.walk {
+  border: 1.5px solid var(--ink);
+}
+.walk-dots {
+  list-style: none;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.walk-dots button {
+  width: 30px;
+  height: 30px;
+  border-radius: 15px;
+  border: 1.5px solid var(--btn-line);
+  background: var(--card);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+.walk-dots button.done {
+  background: #e9e7e1;
+  border-color: #e9e7e1;
+}
+.walk-dots button.on {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+.walk-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.walk-stage {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.stage-pill {
+  font-size: 12.5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+}
+.walk-formula {
+  font-size: 15.5px;
+  background: #eef3fe;
+  color: var(--ink);
+  border-left: 3px solid var(--excite);
+  padding: 10px 12px;
+  border-radius: 4px;
+  overflow-wrap: anywhere;
+}
+.panel-on {
+  border: 1.5px solid var(--excite);
+  box-shadow: 0 0 0 3px #dbe6fd;
+}
+@media (min-width: 1101px) {
+  .sticky-col {
+    position: sticky;
+    top: 16px;
+  }
+}
