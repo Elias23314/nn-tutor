@@ -9,10 +9,13 @@ import { WeightGrid } from '../playground/WeightPictures'
 import { href } from '../routes'
 import { PracticeChart } from './PracticeChart'
 import { THRESHOLD, confusedWith, finishOrder, mostCommonGuess } from './story'
+import { WhatIsIt } from './WhatIsIt'
 import '../playground/playground.css'
 import '../components/layer.css'
 
 const DIGITS = Array.from({ length: 10 }, (_, d) => d)
+/** The digit the opening uses to show pixels becoming numbers. */
+const INTRO_DIGIT = 7
 const REASONS = ['It has the most curves', 'It looks like other digits', 'Just a guess']
 /** Score the test digits often enough to see when each digit crosses 80%. */
 const TEST_EVERY = 25
@@ -58,6 +61,9 @@ function Ready({ state, samples, send }: { state: Snapshot; samples: Float32Arra
 
   return (
     <>
+      <WhatIsIt image={samples[INTRO_DIGIT]} network={state.network} digit={INTRO_DIGIT} />
+
+      <h2 className="layer-h2">Now: does it get better with practice?</h2>
       <PredictCard
         prediction={prediction}
         setPrediction={setPrediction}
