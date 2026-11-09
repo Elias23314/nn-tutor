@@ -52,7 +52,7 @@ const RUNGS: Rung[] = [
     name: 'The math',
     tag: 'Calc I',
     blurb: 'Follow the chain rule backward, then see how deeper connections add up many paths.',
-    route: null,
+    route: 'layer-4',
   },
   {
     n: 'P',
@@ -173,7 +173,7 @@ export function Start() {
           </div>
           <p className="small" style={{ fontSize: 15 }} aria-live="polite">
             {calculus === 'yes'
-              ? 'Try layer 3: it uses arithmetic, and layer 4 (Calc I) is still being built. Starting at layer 1 still gives you the whole story.'
+              ? 'Try layer 3: it uses arithmetic, then layer 4 brings in Calc I. Starting at layer 1 still gives you the whole story.'
               : calculus === 'no'
                 ? 'We’ll suggest layer 1. No math needed: you’ll watch it practice and make predictions. You can jump to any layer from the ladder at the top of every page.'
                 : 'Pick one and we’ll suggest a layer. You can jump to any layer from the ladder at the top of every page.'}

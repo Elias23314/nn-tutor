@@ -221,9 +221,9 @@ function Ready({ example }: { example: Float32Array }) {
         <a className="btn sec" href={href('layer-2')}>
           Back to layer 2
         </a>
-        <button className="btn" disabled title="Not built yet">
-          Go deeper: layer 4 (coming soon)
-        </button>
+        <a className="btn" href={href('layer-4')}>
+          Go deeper: layer 4 finds it without nudging
+        </a>
       </div>
     </>
   )
