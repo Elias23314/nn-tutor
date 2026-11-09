@@ -5,6 +5,7 @@ import { fmt, thousands } from '../playground/connection'
 import './layer1.css'
 import { NetworkDiagram } from '../playground/NetworkDiagram'
 import { OutputBars } from '../playground/OutputBars'
+import { InputLayer } from './InputLayer'
 
 const CELL = 10
 /** Cells shown around the picked pixel: a 5 × 5 window. */
@@ -36,6 +37,7 @@ export function WhatIsIt({ image, network, digit }: { image: Float32Array; netwo
   const guess = predict(fwd.yHat)
   const weights = network.layers.reduce((n, l) => n + l.weights.length, 0)
   const total = countParams(network)
+  const [pick, setPick] = useState(() => firstPick(image))
   return (
     <section className="intro" aria-labelledby="intro-h">
       <div className="intro-head">
@@ -62,7 +64,17 @@ export function WhatIsIt({ image, network, digit }: { image: Float32Array; netwo
           </span>
           <span className="small">Pick any pixel</span>
         </div>
-        <PixelNumbers image={image} digit={digit} />
+        <PixelNumbers image={image} digit={digit} pick={pick} setPick={setPick} />
+      </div>
+
+      <div className="panel sec">
+        <div className="ptitle" style={{ flexWrap: 'wrap' }}>
+          <span className="h3">
+            <span className="fnum-lg">2</span> The 784 numbers become its 784 inputs
+          </span>
+          <span className="small">The pixel you picked above is highlighted</span>
+        </div>
+        <InputLayer image={image} network={network} fwd={fwd} pick={pick} />
       </div>
 
       <div className="grid2 sec">
@@ -70,12 +82,12 @@ export function WhatIsIt({ image, network, digit }: { image: Float32Array; netwo
           title={null}
           network={network}
           fwd={fwd}
-          caption={`The ${digit} above, flowing through the network. Thicker lines push harder; only the strongest few into each neuron are drawn.`}
+          caption={`The ${digit} above, flowing through the whole network: inputs on the left, outputs on the right. Thicker lines push harder; only the strongest few into each neuron are drawn.`}
         />
         <div className="stack">
           <div className="panel">
             <div className="h3" style={{ marginBottom: 10 }}>
-              <span className="fnum-lg">2</span> The numbers flow through layers of neurons
+              <span className="fnum-lg">3</span> The numbers flow through layers of neurons
             </div>
             <p className="body">
               A neuron takes in numbers, weighs each one by the strength of its connection, and adds them up. If the total
@@ -98,7 +110,7 @@ export function WhatIsIt({ image, network, digit }: { image: Float32Array; netwo
           </div>
           <div className="panel">
             <div className="h3" style={{ marginBottom: 10 }}>
-              <span className="fnum-lg">3</span> The biggest output is its guess
+              <span className="fnum-lg">4</span> The biggest output is its guess
             </div>
             <OutputBars yHat={fwd.yHat} />
             <p className="body" style={{ marginTop: 12 }}>
@@ -114,8 +126,17 @@ export function WhatIsIt({ image, network, digit }: { image: Float32Array; netwo
   )
 }
 
-function PixelNumbers({ image, digit }: { image: Float32Array; digit: number }) {
-  const [pick, setPick] = useState(() => firstPick(image))
+function PixelNumbers({
+  image,
+  digit,
+  pick,
+  setPick,
+}: {
+  image: Float32Array
+  digit: number
+  pick: number
+  setPick: (k: number) => void
+}) {
   const row = Math.floor(pick / IMAGE_SIDE)
   const col = pick % IMAGE_SIDE
   const size = IMAGE_SIDE * CELL

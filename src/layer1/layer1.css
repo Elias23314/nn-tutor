@@ -117,3 +117,47 @@
     width: 48px;
   }
 }
+
+/* Step 2: pixels become inputs. */
+.inputs {
+  display: grid;
+  grid-template-columns: minmax(0, 720fr) minmax(0, 420fr);
+  gap: 28px;
+  align-items: start;
+}
+.inputs-scroll {
+  overflow-x: auto;
+}
+.inputs-scroll > svg {
+  width: 100%;
+  min-width: 560px;
+  height: auto;
+  display: block;
+}
+.inputs-text {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.neuron-sum {
+  border-top: 1px solid var(--line-2);
+  padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pick-neuron {
+  cursor: pointer;
+}
+.pick-neuron:focus-visible {
+  outline: none;
+}
+.pick-neuron:focus-visible circle:last-of-type {
+  stroke: var(--excite);
+  stroke-width: 3;
+}
+@media (max-width: 1100px) {
+  .inputs {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
