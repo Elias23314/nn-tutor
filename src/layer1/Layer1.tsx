@@ -35,10 +35,16 @@ export function Layer1() {
 
           <div className="sec">
             <SayItCard
-              before="Nobody told it what a 7 looks like. It got better by being "
-              answer="corrected"
-              after=" on examples."
-              accepts={(t) => /correct|feedback|fix|told.*wrong|mistake/i.test(t)}
+              before="A neural network turns a picture into "
+              answer="numbers"
+              after=", passes them through layers of connected neurons, and its biggest output is its guess."
+              accepts={(t) => /number|value|input|digit/i.test(t)}
+              next={{
+                label: 'Layer 2: How it works',
+                text: 'Before any practice, its guesses are wrong, because its connection strengths start out random. Nobody writes the right ones in. Layer 2 slows down a single correction, so you can see exactly what changes inside the network when it gets something wrong.',
+                href: href('layer-2'),
+                cta: 'Go to layer 2',
+              }}
             />
           </div>
 

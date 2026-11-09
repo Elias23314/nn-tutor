@@ -3,6 +3,7 @@ import { BrainTable, LayerHead, QuickCheck, RightIcon, SayItCard, WrongIcon } fr
 import { DEFAULT_ETA, DEFAULT_SEED, createNetwork, forward, neuronName, predict, type Network } from '../engine/network'
 import { focusConnection, nudgeSlope } from '../layer3/slope'
 import { connectionLabel, fmt, thousands, type Connection } from '../playground/connection'
+import { NetworkDiagram, type Mark } from '../playground/NetworkDiagram'
 import { useTrainer } from '../playground/useTrainer'
 import { href } from '../routes'
 import { deepConnection, gradients, outputChain, pathsFromPixel, type OutputChain } from './chain'
@@ -51,15 +52,47 @@ function Ready({ example }: { example: Float32Array }) {
   const name = connectionLabel(c)
   const source = neuronName(2, c.from)
   const [lit, setLit] = useState<Factor | null>(null)
+  const fwd = useMemo(() => forward(net, example), [net, example])
+  // Where each factor of the chain rule lives in the network.
+  const marks: Mark[] =
+    lit === 1
+      ? [{ layer: 'out', index: LABEL, label: `ŷ₇ = ${fmt(ch.yHat, 3)}, goal 1` }]
+      : lit === 2
+        ? [{ layer: 'out', index: LABEL, label: `sigmoid slope ${fmt(ch.dydz, 3)}` }]
+        : lit === 3
+          ? [{ layer: 2, index: c.from, label: `${source} fires ${fmt(ch.a, 2)}` }]
+          : [
+              { layer: 2, index: c.from },
+              { layer: 'out', index: LABEL },
+            ]
 
   return (
     <>
       <Vocabulary />
 
       <div className="grid2 sec">
-        <OnePath ch={ch} name={name} lit={lit} />
         <div className="stack">
+          <NetworkDiagram
+            title={`${name} in the network`}
+            network={net}
+            fwd={fwd}
+            selected={c}
+            marks={marks}
+            dimOthers
+            caption={
+              lit === null
+                ? `The outlined line is ${name}, the connection the chain rule below is about. Hover a factor to see where it lives in the network.`
+                : lit === 1
+                  ? `Factor 1 lives at the ${LABEL} output: how far it is from its goal of 1.`
+                  : lit === 2
+                    ? `Factor 2 also lives in the ${LABEL} output: how steeply its sigmoid responds to the weighted sum coming in.`
+                    : `Factor 3 lives at neuron ${source}: how hard it fires, which is what flows along ${name}.`
+            }
+          />
           <ChainRule ch={ch} name={name} source={source} lit={lit} setLit={setLit} />
+        </div>
+        <div className="stack">
+          <OnePath ch={ch} name={name} lit={lit} setLit={setLit} />
           <Update net={net} x={example} c={c} ch={ch} />
         </div>
       </div>
@@ -96,10 +129,16 @@ function Ready({ example }: { example: Float32Array }) {
 
       <div className="sec">
         <SayItCard
-          before="A connection’s gradient adds up, over every path to the mistake, the product of the local "
+          before="Backpropagation sends the mistake backward through the network: each connection’s gradient adds up, over every path to the mistake, the product of the local "
           answer="slopes"
           after=" along it."
           accepts={(t) => /slope|derivative|gradient|steep|rate/i.test(t)}
+          next={{
+            label: 'The playground',
+            text: 'That’s the whole loop: predict, measure the mistake, find every slope with backpropagation, step, and repeat thousands of times. In the playground you can run that loop yourself: train the network, draw your own digits, change its examples, and try to make it fail.',
+            href: href('playground'),
+            cta: 'Open the playground',
+          }}
         />
       </div>
 
@@ -147,7 +186,17 @@ function Vocabulary() {
 }
 
 /** The single path from a hidden-layer-2 → output connection to the mistake. */
-function OnePath({ ch, name, lit }: { ch: OutputChain; name: string; lit: Factor | null }) {
+function OnePath({
+  ch,
+  name,
+  lit,
+  setLit,
+}: {
+  ch: OutputChain
+  name: string
+  lit: Factor | null
+  setLit: (f: Factor | null) => void
+}) {
   const [dir, setDir] = useState<'forward' | 'backward'>('backward')
   const nodes = [
     { sym: 'w', value: fmt(ch.w, 4), cap: `strength of ${name}` },
@@ -195,7 +244,7 @@ function OnePath({ ch, name, lit }: { ch: OutputChain; name: string; lit: Factor
           const x1 = X[i] + 34
           const x2 = X[i + 1] - 34
           return (
-            <g key={l.n}>
+            <g key={l.n} onMouseEnter={() => setLit(l.n)} onMouseLeave={() => setLit(null)} style={{ cursor: 'default' }}>
               <line
                 x1={back ? x2 : x1}
                 y1={Y}
@@ -413,12 +462,38 @@ function DeepPaths({ net, x }: { net: Network; x: Float32Array }) {
   const d = useMemo(() => deepConnection(net, x, LABEL), [net, x])
   const fwd = useMemo(() => forward(net, x), [net, x])
   const p = useMemo(() => pathsFromPixel(net, fwd, LABEL, d.from, d.to), [net, fwd, d])
-  const live = p.paths.filter((q) => q.value !== 0)
-  const top = [...live].sort((a, b) => Math.abs(b.value) - Math.abs(a.value)).slice(0, 5)
+  const top = useMemo(
+    () =>
+      p.paths
+        .filter((q) => q.value !== 0)
+        .sort((a, b) => Math.abs(b.value) - Math.abs(a.value))
+        .slice(0, 5),
+    [p],
+  )
+  const [picked, setPicked] = useState(0)
+  const path = top[picked]
   const row = Math.floor(d.from / 28) + 1
   const col = (d.from % 28) + 1
   const j = neuronName(1, d.to)
+  const m = neuronName(2, path.m)
   const sci = (v: number) => fmt(v * 1e6, 1)
+  const signedSci = (v: number) => (v > 0 ? `+${sci(v)}` : sci(v))
+
+  // The local slopes along the picked path, left to right, as they appear in the formula.
+  const w1 = net.layers[1].weights[path.m * net.layers[1].inSize + d.to]
+  const w2 = net.layers[2].weights[path.k * net.layers[2].inSize + path.m]
+  const y = fwd.yHat[path.k]
+  const dLdy = (2 / 10) * (y - (path.k === LABEL ? 1 : 0))
+  const factors: [string, number, number][] = [
+    ['x', p.x, 2],
+    ['r₁', p.r1, 0],
+    [`w ${j}→${m}`, w1, 3],
+    ['r₂', 1, 0],
+    [`w ${m}→${path.k}`, w2, 3],
+    [`ŷ${path.k}(1 − ŷ${path.k})`, y * (1 - y), 3],
+    [`∂L/∂ŷ${path.k}`, dLdy, 3],
+  ]
+
   return (
     <div className="panel">
       <div className="ptitle" style={{ flexWrap: 'wrap' }}>
@@ -454,16 +529,14 @@ function DeepPaths({ net, x }: { net: Network; x: Float32Array }) {
               <span className="m">{fmt(p.total, 6)}</span>
             </div>
             <p className="small" style={{ marginTop: 8 }}>
-              That&rsquo;s {p.total > 0 ? '+' : ''}
-              {sci(p.total)} millionths, exactly what backpropagation gives for this connection.
+              That&rsquo;s {signedSci(p.total)} millionths, exactly what backpropagation gives for this connection.
             </p>
           </div>
-        </div>
-        <div>
-          <div className="sub" style={{ marginBottom: 6 }}>
-            The five biggest paths, in millionths
+
+          <div className="sub" style={{ margin: '20px 0 6px' }}>
+            The five biggest paths, in millionths: click one to draw it
           </div>
-          <table className="ptable">
+          <table className="ptable paths">
             <thead>
               <tr>
                 <th>Through</th>
@@ -472,11 +545,23 @@ function DeepPaths({ net, x }: { net: Network; x: Float32Array }) {
               </tr>
             </thead>
             <tbody>
-              {top.map((q) => (
-                <tr key={`${q.m}-${q.k}`}>
+              {top.map((q, i) => (
+                <tr
+                  key={`${q.m}-${q.k}`}
+                  className={i === picked ? 'on' : undefined}
+                  tabIndex={0}
+                  aria-selected={i === picked}
+                  onClick={() => setPicked(i)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      setPicked(i)
+                    }
+                  }}
+                >
                   <td>{neuronName(2, q.m)}</td>
                   <td>{q.k}</td>
-                  <td className="mono">{q.value > 0 ? `+${sci(q.value)}` : sci(q.value)}</td>
+                  <td className="mono">{signedSci(q.value)}</td>
                 </tr>
               ))}
             </tbody>
@@ -485,6 +570,39 @@ function DeepPaths({ net, x }: { net: Network; x: Float32Array }) {
             Paths pull both ways, and they partly cancel. Backpropagation never lists the paths. It works out each
             neuron&rsquo;s share of the error once, layer by layer, and reuses it, which is why it is fast.
           </p>
+        </div>
+
+        <div className="stack">
+          <NetworkDiagram
+            title={null}
+            network={net}
+            fwd={fwd}
+            selected={d}
+            extra={[
+              { layer: 1, from: d.to, to: path.m },
+              { layer: 2, from: path.m, to: path.k },
+            ]}
+            marks={[
+              { layer: 1, index: d.to },
+              { layer: 2, index: path.m },
+              { layer: 'out', index: path.k, label: path.k === LABEL ? 'goal 1' : 'goal 0' },
+            ]}
+            dimOthers
+            caption={`One of the 160 paths: pixel (${row}, ${col}) → ${j} → ${m} → output ${path.k} → the mistake.`}
+          />
+          <div className="pathmath">
+            <div className="sub">This path&rsquo;s product of local slopes</div>
+            <div className="formula mono">
+              {factors.map(([label, v, digits], i) => (
+                <span key={label} className="pf">
+                  {i > 0 && ' × '}
+                  <span className="pfv">({fmt(v, digits)})</span>
+                  <span className="pfl">{label}</span>
+                </span>
+              ))}{' '}
+              = <b>{signedSci(path.value)}</b> millionths
+            </div>
+          </div>
         </div>
       </div>
     </div>

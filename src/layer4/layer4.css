@@ -147,3 +147,32 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Deeper paths: clickable rows and the picked path's product. */
+.ptable.paths tbody tr {
+  cursor: pointer;
+}
+.ptable.paths tbody tr:hover {
+  background: var(--soft);
+}
+.ptable.paths tbody tr.on {
+  background: #eef3fe;
+  font-weight: 600;
+}
+.pathmath {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pf {
+  white-space: nowrap;
+}
+.pfv {
+  display: inline-flex;
+  flex-direction: column;
+}
+.pfl {
+  font-size: 10.5px;
+  color: var(--muted);
+  margin-left: 2px;
+}

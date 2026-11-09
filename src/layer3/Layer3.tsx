@@ -191,10 +191,16 @@ function Ready({ example }: { example: Float32Array }) {
 
       <div className="sec">
         <SayItCard
-          before="It measures which direction makes the mistake smaller and takes a small "
+          before="For each connection, it measures which direction makes the mistake smaller (the slope) and takes a small "
           answer="step"
-          after=" that way."
+          after=" that way, over and over."
           accepts={(t) => /step|move|change|nudge|jump|adjust/i.test(t)}
+          next={{
+            label: 'Layer 4: The math',
+            text: 'Nudging works for one connection, but this network has 13,002, and testing each one separately would be far too slow. Layer 4 shows how the chain rule finds every slope exactly, in a single pass backward through the network.',
+            href: href('layer-4'),
+            cta: 'Go to layer 4',
+          }}
         />
       </div>
 

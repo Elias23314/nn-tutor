@@ -66,14 +66,14 @@ const RUNGS: Rung[] = [
 
 const QUESTIONS = [
   {
-    q: 'How can a few stickers fool a stop-sign detector?',
-    a: 'A network learns whatever shrinks its mistakes on its examples. That isn’t always the idea we meant.',
+    q: 'Why can AI (neural networks) confuse two things that are drastically different?',
+    a: 'A neural network learns patterns by making its mistakes on labeled examples as small as possible. It doesn’t have common sense the way people do, so if two very different things share similar shapes or patterns, it can mix them up.',
     where: 'Answered in layer 3 and the playground',
   },
   {
-    q: 'Is a neural network really like a brain?',
-    a: 'Parts of the comparison hold up. Each layer shows exactly where it holds and where it breaks.',
-    where: 'Answered across layers 2, 3 and 4',
+    q: 'Why is the data we train a neural network on important?',
+    a: 'The data is where the network learns its patterns. Bad data teaches it the wrong patterns. Biased data does too: a network trained to recognize faces using only photos of white men learns to recognize white men’s faces, but struggles to generalize to everyone else.',
+    where: 'Try it in the playground: remove or relabel its examples',
   },
   {
     q: 'Why does it matter which examples it learns from?',
@@ -92,8 +92,9 @@ export function Start() {
         <div>
           <h1>How does a machine learn?</h1>
           <p className="lede">
-            Nobody writes its rules. Watch a network learn to read handwritten digits, one layer at a time, from no math
-            to the chain rule.
+            Let&rsquo;s dive into one of the core components of AI literacy: how machines learn. By the end of this guided
+            experience, you should be able to describe the process by which neural networks learn new information with
+            minimal human input.
           </p>
           <div className="btns" style={{ marginTop: 32 }}>
             <a className="btn big" href={href('layer-1')}>

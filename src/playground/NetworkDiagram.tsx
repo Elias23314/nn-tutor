@@ -88,6 +88,13 @@ function imageUrl(x: ArrayLike<number>): string {
   return canvas.toDataURL()
 }
 
+/** A node to ring in blue, with an optional label: a hidden neuron (layer 1 or 2) or an output. */
+export interface Mark {
+  layer: 1 | 2 | 'out'
+  index: number
+  label?: string
+}
+
 interface Props {
   network: Network
   fwd: ForwardResult
@@ -106,6 +113,12 @@ interface Props {
   unchangedLabel?: string
   /** What "Describe this" says about the colored and gray connections when `changed` is given. */
   changedDescription?: string
+  /** More connections to emphasize, drawn like `selected`: a path through the network, say. */
+  extra?: Connection[]
+  /** Nodes to ring in blue. */
+  marks?: Mark[]
+  /** Fade every connection except the emphasized ones. */
+  dimOthers?: boolean
   /** Panel heading; null for none. */
   title?: string | null
   caption: ReactNode
@@ -120,6 +133,9 @@ export function NetworkDiagram({
   changed = null,
   unchangedLabel = 'doesn’t change',
   changedDescription,
+  extra = [],
+  marks = [],
+  dimOthers = false,
   title = 'The network',
   caption,
 }: Props) {
@@ -140,7 +156,7 @@ export function NetworkDiagram({
   const drawLine = (l: Line, key: string, emphasis = false) => {
     const gray = l.push === 0 || !isChanged(l.c)
     return (
-      <g key={key}>
+      <g key={key} opacity={dimOthers && !emphasis ? 0.18 : 1}>
         {emphasis && <line x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke="var(--ink)" strokeWidth={width(l) + 3} />}
         <line
           x1={l.x1}
@@ -169,6 +185,13 @@ export function NetworkDiagram({
   }
 
   const hidden = [fwd.layers[0].a, fwd.layers[1].a]
+  // Hidden neurons that are highlighted (an end of an emphasized connection, or marked) get their name drawn in.
+  const named = new Set<string>()
+  for (const c of [...(selected ? [selected] : []), ...extra]) {
+    if (c.layer >= 1) named.add(`${c.layer - 1}-${c.from}`)
+    if (c.layer <= 1) named.add(`${c.layer}-${c.to}`)
+  }
+  for (const m of marks) if (m.layer !== 'out') named.add(`${m.layer - 1}-${m.index}`)
   const firingCounts = hidden.map((a) => Array.from(a).filter((v) => v > 0).length)
   const ranked = Array.from(fwd.yHat)
     .map((v, d) => [d, v] as const)
@@ -191,25 +214,45 @@ export function NetworkDiagram({
         {/* Gray (unchanged) lines go underneath the colored ones. */}
         {lines
           .filter((l) => !selected || !sameConnection(l.c, selected))
+          .filter((l) => !extra.some((c) => sameConnection(l.c, c)))
           .sort((a, b) => Number(isChanged(a.c) && a.push !== 0) - Number(isChanged(b.c) && b.push !== 0))
           .map((l, i) => drawLine(l, `l${i}`))}
+        {extra.map((c, i) => drawLine(lineFor(network, fwd, c), `extra${i}`, true))}
         {selectedLine && drawLine(selectedLine, 'selected', true)}
 
         {hidden.map((a, h) => {
           const max = Math.max(...a, 1e-9)
-          return Array.from(a, (v, j) => (
-            <circle
-              key={`${h}-${j}`}
-              cx={COLS[h]}
-              cy={hiddenY(j)}
-              r={9}
-              fill={v > 0 ? shade(v / max) : '#fff'}
-              stroke={v > 0 ? 'var(--ink)' : '#8E949C'}
-              strokeWidth={1.4}
-            >
-              <title>{`Neuron ${neuronName(h === 0 ? 1 : 2, j)} in hidden layer ${h + 1}: ${v > 0 ? `firing ${fmt(v, 2)}` : 'silent'}`}</title>
-            </circle>
-          ))
+          return Array.from(a, (v, j) => {
+            const name = neuronName(h === 0 ? 1 : 2, j)
+            const isNamed = named.has(`${h}-${j}`)
+            return (
+              <g key={`${h}-${j}`}>
+                <circle
+                  cx={COLS[h]}
+                  cy={hiddenY(j)}
+                  r={isNamed ? 10.5 : 9}
+                  fill={v > 0 ? shade(v / max) : '#fff'}
+                  stroke={v > 0 ? 'var(--ink)' : '#8E949C'}
+                  strokeWidth={1.4}
+                >
+                  <title>{`Neuron ${name} in hidden layer ${h + 1}: ${v > 0 ? `firing ${fmt(v, 2)}` : 'silent'}`}</title>
+                </circle>
+                {isNamed && (
+                  <text
+                    x={COLS[h]}
+                    y={hiddenY(j) + 4}
+                    fontSize={11.5}
+                    fontWeight={700}
+                    textAnchor="middle"
+                    fill={v > 0 && v / max > 0.45 ? '#fff' : 'var(--ink)'}
+                    pointerEvents="none"
+                  >
+                    {name}
+                  </text>
+                )}
+              </g>
+            )
+          })
         })}
         {Array.from(fwd.yHat, (v, k) => (
           <g key={k}>
@@ -232,6 +275,33 @@ export function NetworkDiagram({
             )}
           </g>
         ))}
+        {marks.map((m, i) => {
+          const out = m.layer === 'out'
+          const cx = out ? COLS[2] : COLS[m.layer === 1 ? 0 : 1]
+          const cy = out ? outputY(m.index) : hiddenY(m.index)
+          // Outputs are labeled on the right; hidden neurons above-left, with a halo so lines don't hide the text.
+          const below = out && m.index === guess
+          return (
+            <g key={`m${i}`} pointerEvents="none">
+              <circle cx={cx} cy={cy} r={out ? 18 : 13.5} fill="none" stroke="var(--excite)" strokeWidth={3} />
+              {m.label && (
+                <text
+                  x={out ? cx + 24 : cx - 16}
+                  y={out ? cy + (below ? 22 : 4.5) : cy - 10}
+                  fontSize={12.5}
+                  fontWeight={600}
+                  fill="var(--excite)"
+                  textAnchor={out ? 'start' : 'end'}
+                  stroke="#fff"
+                  strokeWidth={4}
+                  paintOrder="stroke"
+                >
+                  {m.label}
+                </text>
+              )}
+            </g>
+          )
+        })}
         {[
           [IMG.x + IMG.size / 2, IMG.y + IMG.size + 22, '784 pixels'],
           [COLS[0], 438, 'hidden layer 1'],

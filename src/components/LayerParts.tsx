@@ -93,8 +93,18 @@ export function BrainTable({
   )
 }
 
+/** What the next layer is about, shown once the sentence is checked. */
+export interface NextUp {
+  /** "Layer 2: How it works" */
+  label: string
+  text: ReactNode
+  href: string
+  cta: string
+}
+
 /**
- * "Say it in one sentence": fill in the blank, then compare with the model sentence.
+ * "Say it in one sentence": fill in the blank, then compare with the model sentence, which sums up
+ * the whole layer. Once checked, `next` introduces how the next layer builds on it.
  * `accepts` decides whether an answer counts as matching.
  */
 export function SayItCard({
@@ -102,11 +112,13 @@ export function SayItCard({
   after,
   answer,
   accepts,
+  next,
 }: {
   before: string
   after: string
   answer: string
   accepts: (text: string) => boolean
+  next?: NextUp
 }) {
   const [text, setText] = useState('')
   const [checked, setChecked] = useState<null | boolean>(null)
@@ -154,6 +166,15 @@ export function SayItCard({
             )}
           </svg>
           {checked ? 'Matches the model sentence: ' : 'Compare with the model sentence: '}“{model}”
+        </div>
+      )}
+      {checked !== null && next && (
+        <div className="next-up">
+          <span className="k">Up next · {next.label}</span>
+          <p>{next.text}</p>
+          <a className="btn next-btn" href={next.href}>
+            {next.cta}
+          </a>
         </div>
       )}
     </form>

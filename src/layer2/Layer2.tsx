@@ -27,10 +27,10 @@ export function Layer2() {
         loopCaption="Step 3 of the replay is the “step”"
       />
       <QuickCheck
-        before="It got better by being "
-        after=" on examples."
-        options={['given the rules', 'corrected', 'shown every digit once']}
-        answer="corrected"
+        before="A neural network turns a picture into "
+        after=", passes them through layers of neurons, and its biggest output is its guess."
+        options={['rules', 'numbers', 'words']}
+        answer="numbers"
       />
       {status.kind === 'loading' && <p className="notice">Loading its training examples…</p>}
       {status.kind === 'error' && (
@@ -165,8 +165,14 @@ function Ready({ example }: { example: Float32Array }) {
         <SayItCard
           before="Learning means changing "
           answer="connection strengths"
-          after=", and only the connections involved in a mistake change."
+          after=": after a mistake, only the connections that played a part in it change."
           accepts={(t) => /connection|weight|strength|synap/i.test(t)}
+          next={{
+            label: 'Layer 3: With numbers',
+            text: 'So a correction changes connection strengths, but by how much, and in which direction? Layer 3 zooms in on one connection. You’ll nudge it by hand, measure how the mistake responds, and work out the step it should take.',
+            href: href('layer-3'),
+            cta: 'Go to layer 3',
+          }}
         />
       </div>
 
