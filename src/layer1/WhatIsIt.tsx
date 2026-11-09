@@ -42,14 +42,6 @@ export function WhatIsIt({ image, network, digit }: { image: Float32Array; netwo
     <section className="intro" aria-labelledby="intro-h">
       <div className="intro-head">
         <h2 id="intro-h">First: what is a neural network?</h2>
-        {/* Not a link: the URL hash is the page route. */}
-        <button
-          className="lnk"
-          style={{ fontSize: 14.5 }}
-          onClick={() => document.getElementById('predict-q')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
-        >
-          Skip to the practice
-        </button>
       </div>
       <p className="body intro-lede">
         A neural network is a program that turns numbers into other numbers. Nobody writes its rules. Instead it has

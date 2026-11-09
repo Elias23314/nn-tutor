@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react'
-import { BrainTable, LayerHead, LockIcon, QuickCheck, SayItCard } from '../components/LayerParts'
+import { LayerHead, LockIcon, QuickCheck, SayItCard } from '../components/LayerParts'
 import { DEFAULT_ETA, DEFAULT_SEED, createNetwork, forward, neuronName, zeroGradients, type Network } from '../engine/network'
-import { connectionLabel, fmt, sourceActivity, strength, thousands, type Connection } from '../playground/connection'
+import { connectionLabel, fmt, sourceActivity, strength, type Connection } from '../playground/connection'
 import { NetworkDiagram } from '../playground/NetworkDiagram'
 import { useTrainer } from '../playground/useTrainer'
 import { href } from '../routes'
@@ -188,25 +188,6 @@ function Ready({ example }: { example: Float32Array }) {
           </div>
         </>
       )}
-
-      <div className="sec">
-        <BrainTable
-          topic="The objective"
-          rows={[
-            [
-              'The mistake: the average of ten squared gaps between outputs and goals',
-              'What, if anything, the brain is minimizing is unknown',
-              'Here a person chose what counts as a mistake. Researchers call this the objective.',
-            ],
-            [
-              'Testing one connection by nudging it',
-              'Synapses don’t run trial nudges one at a time either',
-              `Nudging works for one connection, but this network has ${thousands(13_002)}. Neither computers nor brains learn by testing each one separately.`,
-            ],
-          ]}
-          so="So: learning needs a measure of error, and here someone chose it."
-        />
-      </div>
 
       <div className="sec">
         <SayItCard

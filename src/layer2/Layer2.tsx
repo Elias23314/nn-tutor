@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { BrainTable, LayerHead, QuickCheck, RightIcon, SayItCard, WrongIcon } from '../components/LayerParts'
+import { LayerHead, QuickCheck, RightIcon, SayItCard, WrongIcon } from '../components/LayerParts'
 import { DEFAULT_SEED, PIXELS, createNetwork, neuronName } from '../engine/network'
 import { fmt, thousands } from '../playground/connection'
 import { NetworkDiagram } from '../playground/NetworkDiagram'
@@ -159,27 +159,6 @@ function Ready({ example }: { example: Float32Array }) {
         ) : (
           <p className="body">This appears at step 3 of the replay, once you&rsquo;ve picked which connections will change.</p>
         )}
-      </div>
-
-      <div className="sec">
-        <BrainTable
-          topic="The architecture"
-          rows={[
-            ['Connection strength', 'Synaptic strength', 'A good match in spirit: in both, learning lives in the connections.'],
-            [
-              'Blue and orange connections',
-              'Excitatory and inhibitory synapses',
-              'A real neuron’s outgoing synapses are usually all one kind (Dale’s principle). Here one neuron can do both, and a connection can flip.',
-            ],
-            ['A neuron firing', 'A firing rate', 'Real neurons fire in spikes over time. Here activity is a single number.'],
-            [
-              'Learning from a mistake',
-              'Synaptic plasticity',
-              'This network sends an error signal backward from the outputs; most known brain learning rules use local activity. Layer 4 returns to this.',
-            ],
-          ]}
-          so="So: learning lives in the connections in both, but these neurons are far simpler."
-        />
       </div>
 
       <div className="sec">

@@ -9,15 +9,11 @@
   gap: 16px;
   flex-wrap: wrap;
 }
-.intro h2,
-.layer-h2 {
+.intro h2 {
   font-size: 26px;
   line-height: 1.25;
   font-weight: 600;
   letter-spacing: -0.006em;
-}
-.layer-h2 {
-  margin-bottom: 18px;
 }
 .intro-lede {
   max-width: 820px;
