@@ -102,7 +102,8 @@ interface Props {
    * colored and the ones it leaves alone (gradient 0) are gray.
    */
   changed?: Gradients | null
-  title?: string
+  /** Panel heading; null for none. */
+  title?: string | null
   caption: ReactNode
 }
 
@@ -161,7 +162,7 @@ export function NetworkDiagram({ network, fwd, selected = null, onSelect, top = 
   return (
     <div className="panel net">
       <div className="ptitle">
-        <span className="h3">{title}</span>
+        <span className="h3">{title ?? ''}</span>
         <button className="tog" role="switch" aria-checked={describe} onClick={() => setDescribe(!describe)}>
           <span className="sw">
             <i />

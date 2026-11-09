@@ -1,7 +1,7 @@
 import { href, type Route } from '../routes'
 
 const RUNGS: { title: string; meta: string; n?: number; route?: Route }[] = [
-  { title: 'Start here', meta: 'Why it matters' },
+  { title: 'Start here', meta: 'Why it matters', route: 'start' },
   { n: 1, title: 'What it does', meta: 'No math', route: 'layer-1' },
   { n: 2, title: 'How it works', meta: 'No math', route: 'layer-2' },
   { n: 3, title: 'With numbers', meta: 'Arithmetic' },
@@ -13,10 +13,10 @@ const RUNGS: { title: string; meta: string; n?: number; route?: Route }[] = [
 export function TopBar({ current }: { current: Route }) {
   return (
     <header className="topbar">
-      <div className="brand">
+      <a className="brand" href={href('start')}>
         <b>How a machine learns</b>
         <span>A neural network tutor</span>
-      </div>
+      </a>
       <nav className="ladder" aria-label="Depth">
         {RUNGS.map((r, i) => {
           const isCurrent = r.route === current

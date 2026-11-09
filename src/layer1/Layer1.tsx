@@ -155,8 +155,8 @@ function Ready({ state, samples, send }: { state: Snapshot; samples: Float32Arra
       </div>
 
       <div className="exits">
-        <a className="btn sec" href={href('playground')}>
-          Try it in the playground
+        <a className="btn sec" href={href('start')}>
+          Back to start here
         </a>
         <a className="btn" href={href('layer-2')}>
           Go deeper: layer 2
