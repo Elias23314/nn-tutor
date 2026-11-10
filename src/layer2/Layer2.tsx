@@ -170,8 +170,6 @@ function Ready({ example }: { example: Float32Array }) {
           next={{
             label: 'Layer 3: With numbers',
             text: 'So a correction changes connection strengths, but by how much, and in which direction? Layer 3 zooms in on one connection. You’ll nudge it by hand, measure how the mistake responds, and work out the step it should take.',
-            href: href('layer-3'),
-            cta: 'Go to layer 3',
           }}
         />
       </div>

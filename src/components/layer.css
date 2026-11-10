@@ -553,8 +553,3 @@ a.btn {
   color: #e4e6ea;
   max-width: 820px;
 }
-.repack .next-btn {
-  background: #fff;
-  color: var(--ink);
-  border-color: #fff;
-}

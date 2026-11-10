@@ -1,27 +1,34 @@
+import { useState } from 'react'
 import { LayerHead, SayItCard } from '../components/LayerParts'
-import { useTrainer } from '../playground/useTrainer'
+import type { Snapshot } from '../playground/protocol'
+import { useTrainer, type Send } from '../playground/useTrainer'
 import { href } from '../routes'
 import { WhatIsIt } from './WhatIsIt'
 import '../playground/playground.css'
 import '../components/layer.css'
 
-/** The digit the opening uses to show pixels becoming numbers. */
+/** The digit the page follows from picture to guess. */
 const INTRO_DIGIT = 7
+/** One pass through the 60,000 training digits (60,000 / 32): what "after practice" means here. */
+const ONE_PASS = 1_875
 
 // The practice section (prediction, ten digits, practice chart, reveal, mistake panel, weight pictures and
 // brain table) was taken out to keep layer 1 simple. It's in git history (2e2c631) if it comes back;
 // story.ts and PracticeChart.tsx are kept for that.
 export function Layer1() {
-  const { status } = useTrainer()
+  // Score the test digits only at the end: this page just needs the network before and after practice.
+  const { status, send } = useTrainer([
+    { type: 'setTestEvery', rounds: ONE_PASS },
+    { type: 'setSpeed', speed: 'fast' },
+  ])
   return (
     <main className="layer">
       <LayerHead
         n={1}
         name="What it does"
         tag="No math"
-        title="Does it actually get better with practice?"
-        lede="Its job: name the digit in a 28 × 28 image. Nobody tells it what a 7 looks like. It only gets corrected on examples."
-        loopCaption="Each round of practice runs this whole loop once"
+        title="What is a neural network?"
+        lede="This one has a single job: look at a handwritten digit and say which digit it is. Follow one 7 from picture to guess."
       />
       {status.kind === 'loading' && <p className="notice">Loading 70,000 handwritten digits…</p>}
       {status.kind === 'error' && (
@@ -29,35 +36,52 @@ export function Layer1() {
           Couldn&rsquo;t start the network: {status.message}
         </p>
       )}
-      {status.kind === 'ready' && (
-        <>
-          <WhatIsIt image={status.samples[INTRO_DIGIT]} network={status.state.network} digit={INTRO_DIGIT} />
-
-          <div className="sec">
-            <SayItCard
-              before="A neural network turns a picture into "
-              answer="numbers"
-              after=", passes them through layers of connected neurons, and its biggest output is its guess."
-              accepts={(t) => /number|value|input|digit/i.test(t)}
-              next={{
-                label: 'Layer 2: How it works',
-                text: 'Before any practice, its guesses are wrong, because its connection strengths start out random. Nobody writes the right ones in. Layer 2 slows down a single correction, so you can see exactly what changes inside the network when it gets something wrong.',
-                href: href('layer-2'),
-                cta: 'Go to layer 2',
-              }}
-            />
-          </div>
-
-          <div className="exits">
-            <a className="btn sec" href={href('start')}>
-              Back to start here
-            </a>
-            <a className="btn" href={href('layer-2')}>
-              Go deeper: layer 2
-            </a>
-          </div>
-        </>
-      )}
+      {status.kind === 'ready' && <Ready state={status.state} image={status.samples[INTRO_DIGIT]} send={send} />}
     </main>
+  )
+}
+
+function Ready({ state, image, send }: { state: Snapshot; image: Float32Array; send: Send }) {
+  const [view, setView] = useState<'before' | 'after'>('before')
+  return (
+    <>
+      <WhatIsIt
+        image={image}
+        network={view === 'after' ? state.network : state.initialNetwork}
+        digit={INTRO_DIGIT}
+        practice={{
+          view,
+          round: Math.min(state.round, ONE_PASS),
+          total: ONE_PASS,
+          setView: (v) => {
+            setView(v)
+            // The first switch to "after" runs one pass of practice; later switches just show the result.
+            if (v === 'after' && state.round === 0 && state.pending === 0) send({ type: 'practice', rounds: ONE_PASS })
+          },
+        }}
+      />
+
+      <div className="sec">
+        <SayItCard
+          before="A neural network turns a picture into "
+          answer="numbers"
+          after=", passes them through layers of connected neurons, and its biggest output is its guess."
+          accepts={(t) => /number|value|input|digit/i.test(t)}
+          next={{
+            label: 'Layer 2: How it works',
+            text: 'Practice changed its guess from wrong to right, and nobody wrote the right connection strengths in. Layer 2 slows down a single correction, so you can see exactly what changes inside the network when it gets something wrong.',
+          }}
+        />
+      </div>
+
+      <div className="exits">
+        <a className="btn sec" href={href('start')}>
+          Back to start here
+        </a>
+        <a className="btn" href={href('layer-2')}>
+          Go deeper: layer 2
+        </a>
+      </div>
+    </>
   )
 }

@@ -19,7 +19,8 @@ export function LayerHead({
   lede: string
   /** Loop stages to highlight. */
   loopOn?: string[]
-  loopCaption: string
+  /** Leave out to hide the learning loop, on a page that doesn't cover it yet. */
+  loopCaption?: string
 }) {
   return (
     <div className="head">
@@ -32,6 +33,7 @@ export function LayerHead({
         <h1>{title}</h1>
         <p className="lede">{lede}</p>
       </div>
+      {loopCaption && (
       <div className="loop">
         <div className="row" aria-label={`The learning loop: ${LOOP.join(', then ')}`}>
           {LOOP.map((s, i) => (
@@ -47,6 +49,7 @@ export function LayerHead({
         </div>
         <div className="cap">{loopCaption}</div>
       </div>
+      )}
     </div>
   )
 }
@@ -98,8 +101,6 @@ export interface NextUp {
   /** "Layer 2: How it works" */
   label: string
   text: ReactNode
-  href: string
-  cta: string
 }
 
 /**
@@ -172,9 +173,6 @@ export function SayItCard({
         <div className="next-up">
           <span className="k">Up next · {next.label}</span>
           <p>{next.text}</p>
-          <a className="btn next-btn" href={next.href}>
-            {next.cta}
-          </a>
         </div>
       )}
     </form>

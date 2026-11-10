@@ -164,8 +164,6 @@ function Ready({ example }: { example: Float32Array }) {
           next={{
             label: 'The playground',
             text: 'That’s the whole loop: predict, measure the mistake, find every slope with backpropagation, step, and repeat thousands of times. In the playground you can run that loop yourself: train the network, draw your own digits, change its examples, and try to make it fail.',
-            href: href('playground'),
-            cta: 'Open the playground',
           }}
         />
       </div>

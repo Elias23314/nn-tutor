@@ -136,24 +136,79 @@
   gap: 10px;
 }
 .neuron-sum {
-  border-top: 1px solid var(--line-2);
-  padding-top: 12px;
+  margin: 14px 0;
+  padding: 14px 16px;
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  background: var(--soft);
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-.pick-neuron {
-  cursor: pointer;
+.neuron-chips {
+  gap: 4px;
 }
-.pick-neuron:focus-visible {
-  outline: none;
-}
-.pick-neuron:focus-visible circle:last-of-type {
-  stroke: var(--excite);
-  stroke-width: 3;
+.neuron-chips .chip {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  justify-content: center;
+  font-size: 14px;
 }
 @media (max-width: 1100px) {
   .inputs {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* The route from picture to guess, and small touches in step 1. */
+.route {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 8px 0;
+  margin-bottom: 24px;
+}
+.route li {
+  display: flex;
+  align-items: center;
+}
+.route-arrow {
+  color: #a3a7ad;
+  margin: 0 8px;
+}
+.route-box {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  font-size: 15px;
+}
+.route-box b {
+  font-weight: 600;
+}
+.route-box span {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.pick-hint {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--excite);
+  background: #eef3fe;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+.callout {
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 500;
+  border-left: 3px solid var(--ink);
+  background: var(--soft);
+  padding: 10px 14px;
+  border-radius: 0 8px 8px 0;
 }

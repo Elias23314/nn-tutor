@@ -24,10 +24,10 @@ interface Rung {
 const RUNGS: Rung[] = [
   {
     n: '1',
-    question: 'Does it actually get better with practice?',
+    question: 'What is a neural network?',
     name: 'What it does',
     tag: 'No math',
-    blurb: 'Watch it practice on handwritten digits, and predict which digit it masters last.',
+    blurb: 'Follow a handwritten digit as it becomes 784 numbers, flows through layers of neurons, and comes out as a guess.',
     route: 'layer-1',
   },
   {
