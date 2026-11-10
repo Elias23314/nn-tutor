@@ -268,7 +268,7 @@ export function NetworkDiagram({
             >
               {k}
             </text>
-            {k === guess && (
+            {k === guess && !marks.some((m) => m.layer === 'out' && m.index === k && m.label) && (
               <text x={COLS[2] + 22} y={outputY(k) + 4.5} fontSize={12} fontWeight={500} fill="var(--muted)">
                 its guess
               </text>
@@ -280,14 +280,14 @@ export function NetworkDiagram({
           const cx = out ? COLS[2] : COLS[m.layer === 1 ? 0 : 1]
           const cy = out ? outputY(m.index) : hiddenY(m.index)
           // Outputs are labeled on the right; hidden neurons above-left, with a halo so lines don't hide the text.
-          const below = out && m.index === guess
+          // A labeled mark on the guessed output replaces the usual "its guess" text.
           return (
             <g key={`m${i}`} pointerEvents="none">
               <circle cx={cx} cy={cy} r={out ? 18 : 13.5} fill="none" stroke="var(--excite)" strokeWidth={3} />
               {m.label && (
                 <text
                   x={out ? cx + 24 : cx - 16}
-                  y={out ? cy + (below ? 22 : 4.5) : cy - 10}
+                  y={out ? cy + 4.5 : cy - 10}
                   fontSize={12.5}
                   fontWeight={600}
                   fill="var(--excite)"
@@ -322,13 +322,13 @@ export function NetworkDiagram({
           <svg width="34" height="12" aria-hidden="true">
             <line x1="1" y1="6" x2="33" y2="6" stroke="var(--excite)" strokeWidth="3" />
           </svg>
-          excites
+          pushes up
         </span>
         <span className="i">
           <svg width="34" height="12" aria-hidden="true">
             <line x1="1" y1="6" x2="33" y2="6" stroke="var(--inhibit)" strokeWidth="3" strokeDasharray="5 3" />
           </svg>
-          inhibits (dashed)
+          pushes down (dashed)
         </span>
         <span className="i">
           <svg width="16" height="16" aria-hidden="true">
@@ -374,7 +374,7 @@ export function NetworkDiagram({
               {connectionLabel(selected)} has strength {fmt(strength(network, selected))} and{' '}
               {selectedLine.push === 0
                 ? 'carries nothing for this digit, because its source is silent.'
-                : `${selectedLine.push > 0 ? 'excites' : 'inhibits'} its target by ${fmt(Math.abs(selectedLine.push))}.`}
+                : `pushes its target ${selectedLine.push > 0 ? 'up' : 'down'} by ${fmt(Math.abs(selectedLine.push))}.`}
             </>
           )}
         </p>

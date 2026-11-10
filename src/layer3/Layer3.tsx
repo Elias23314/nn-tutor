@@ -144,7 +144,7 @@ function Ready({ example }: { example: Float32Array }) {
                 {source} is firing (<span className="mono">{fmt(firing, 2)}</span>), so a stronger connection lifts the{' '}
                 {LABEL} output toward its goal of 1.
                 {w0 < 0 &&
-                  ` Right now it barely inhibits the ${LABEL} (strength ${fmt(w0)}), which pulls the wrong way.`}
+                  ` Right now it pushes the ${LABEL} output down very slightly (strength ${fmt(w0)}), which is the wrong way.`}
               </p>
             )}
           </section>

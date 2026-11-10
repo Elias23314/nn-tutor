@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { LayerHead, QuickCheck, RightIcon, SayItCard, WrongIcon } from '../components/LayerParts'
-import { DEFAULT_SEED, PIXELS, createNetwork, neuronName } from '../engine/network'
-import { fmt, thousands } from '../playground/connection'
-import { NetworkDiagram } from '../playground/NetworkDiagram'
+import { DEFAULT_SEED, IMAGE_SIDE, PIXELS, createNetwork, neuronName, predict } from '../engine/network'
+import { fmt, thousands, type Connection } from '../playground/connection'
+import { NetworkDiagram, type Mark } from '../playground/NetworkDiagram'
 import { PixelImage } from '../playground/PixelImage'
 import { useTrainer } from '../playground/useTrainer'
 import { WeightCanvas } from '../playground/WeightPictures'
@@ -10,8 +10,11 @@ import { href } from '../routes'
 import { correct, type Correction } from './correction'
 import '../playground/playground.css'
 import '../components/layer.css'
+import './layer2.css'
 
 const LABEL = 7
+/** One round of practice, in plain words. Layer 3 adds "find the slope". */
+const ROUND = ['Guess', 'Measure the mistake', 'Adjust', 'Repeat']
 
 export function Layer2() {
   const { status } = useTrainer()
@@ -21,10 +24,10 @@ export function Layer2() {
         n={2}
         name="How it works"
         tag="No math"
-        title="What physically changes when it learns?"
-        lede={`One correction, slowed down. Before any practice, it sees a single ${LABEL} from its training examples.`}
-        loopOn={['Step']}
-        loopCaption="Step 3 of the replay is the “step”"
+        title="What changes inside it when it learns?"
+        lede="In layer 1, practice turned a wrong guess into a right one. Practice is one small routine, repeated thousands of times: show it a digit along with the right answer, see what it guesses, measure how wrong it was, and adjust. This page slows down a single round."
+        loop={ROUND}
+        loopCaption="One round of practice. The replay below walks through it."
       />
       <QuickCheck
         before="A neural network turns a picture into "
@@ -43,123 +46,169 @@ export function Layer2() {
   )
 }
 
-type Pick = 'ink' | 'blank'
+type Guess = 'ink' | 'blank' | 'both'
+
+/** The pixel → hidden-layer-1 connection this correction changes most: one concrete case to look at. */
+function mostChanged(c: Correction): Connection {
+  const g = c.grads.layers[0]
+  let best = 0
+  for (let k = 1; k < g.weights.length; k++) if (Math.abs(g.weights[k]) > Math.abs(g.weights[best])) best = k
+  // Its pixel has ink by construction: connections from blank pixels have a gradient of 0.
+  return { layer: 0, from: best % PIXELS, to: Math.floor(best / PIXELS) }
+}
 
 function Ready({ example }: { example: Float32Array }) {
   // The untrained network everyone starts from, and one correction on this 7.
   const c = useMemo(() => correct(createNetwork(undefined, DEFAULT_SEED), example, LABEL), [example])
+  const one = useMemo(() => mostChanged(c), [c])
   const [step, setStep] = useState(1)
-  const [picks, setPicks] = useState<Pick[]>([])
+  const [guess, setGuess] = useState<Guess | null>(null)
   const [locked, setLocked] = useState(false)
   const [why, setWhy] = useState<number | null>(null)
-  const showChanges = step === 3
+  const [show, setShow] = useState<'before' | 'after'>('after')
+  const adjusted = step === 3
 
-  const togglePick = (p: Pick) => setPicks((current) => (current.includes(p) ? current.filter((q) => q !== p) : [...current, p]))
+  // What the diagram points at in each step.
+  const marks: Mark[] =
+    step === 1
+      ? [{ layer: 'out', index: c.guessBefore }]
+      : step === 2
+        ? [
+            { layer: 'out', index: c.guessBefore, label: `guess: ${fmt(c.before.yHat[c.guessBefore], 2)}\ngoal 0` },
+            { layer: 'out', index: LABEL, label: `says ${fmt(c.before.yHat[LABEL], 2)}\ngoal 1` },
+          ]
+        : [{ layer: 1, index: one.to }]
+  const caption =
+    step === 1
+      ? `The ${LABEL} flows through the untrained network, and its biggest output, ${c.guessBefore}, is its guess. Only the strongest connection into each neuron is drawn.`
+      : step === 2
+        ? `The right answer is ${LABEL}, so the ${LABEL} output should be 1 and every other output should be 0.`
+        : 'Colored connections changed in this correction. Gray ones didn’t: nothing flowed through them, or the neuron they feed was silent. The outlined one is looked at more closely below.'
 
   return (
     <>
+      <p className="body l2-note">
+        This {LABEL} is one of the 60,000 examples it practices on, so it&rsquo;s a different {LABEL} from layer 1&rsquo;s.
+        Every one of those examples comes with the right answer attached. The network here hasn&rsquo;t practiced at all
+        yet.
+      </p>
+
       <div className="grid2">
         <NetworkDiagram
-          title="The network during this correction"
+          title="The network during this round"
           network={c.start}
           fwd={c.before}
-          top={4}
-          changed={showChanges ? c.grads : null}
-          caption={
-            showChanges
-              ? 'Colored connections change in this correction. Gray ones don’t, because they start or end at a silent neuron. Showing the 4 strongest connections into each neuron.'
-              : 'The 7 flowing through the untrained network. Showing the 4 strongest connections into each neuron.'
-          }
+          top={adjusted ? 2 : 1}
+          changed={adjusted ? c.grads : null}
+          unchangedLabel="didn’t change"
+          changedDescription="This correction changes connections that had something flowing through them into a firing neuron, and leaves the rest alone."
+          selected={adjusted ? one : null}
+          marks={marks}
+          caption={<span aria-live="polite">{caption}</span>}
         />
 
         <div className="stack">
-          <Replay c={c} step={step} setStep={setStep} locked={locked} />
-
-          {step >= 2 && (
-            <div className="panel">
-              <div className="sub" style={{ marginBottom: 8 }} id="pick-q">
-                {locked
-                  ? 'Before step 3 you picked which connections would change'
-                  : 'Before step 3: which connections from the pixels will change? Pick any.'}
-              </div>
-              <div className="chips" role="group" aria-labelledby="pick-q">
-                {(
-                  [
-                    ['ink', 'From ink pixels'],
-                    ['blank', 'From blank pixels'],
-                  ] as const
-                ).map(([p, label]) => (
-                  <button key={p} className="chip" aria-pressed={picks.includes(p)} disabled={locked} onClick={() => togglePick(p)}>
-                    {label}
-                    {locked && picks.includes(p) && (p === 'ink' ? <RightIcon /> : <WrongIcon />)}
-                  </button>
-                ))}
-              </div>
-              {!locked && (
-                <button
-                  className="btn sm"
-                  style={{ marginTop: 12 }}
-                  disabled={picks.length === 0}
-                  onClick={() => {
-                    setLocked(true)
-                    setStep(3)
-                  }}
-                >
-                  Lock in and show step 3
-                </button>
-              )}
-              {locked && (
-                <p className="feedback" aria-live="polite">
-                  {picks.includes('ink') && picks.includes('blank')
-                    ? 'One of two. A blank pixel is 0, so its connections played no part in this mistake.'
-                    : picks.includes('ink')
-                      ? `Right: only connections from the ${c.inkPixels} ink pixels change. A blank pixel is 0, so its connections played no part in this mistake.`
-                      : 'The other way round: only connections from ink pixels change. A blank pixel is 0, so its connections played no part in this mistake.'}
-                </p>
-              )}
-            </div>
-          )}
-
-          {locked && (
-            <WhyBlank
-              why={why}
-              setWhy={setWhy}
-              changed={c.changed}
+          <Replay c={c} step={step} setStep={setStep} locked={locked}>
+            <Prediction
+              guess={guess}
+              setGuess={setGuess}
+              locked={locked}
+              lockIn={() => {
+                setLocked(true)
+                setStep(3)
+              }}
             />
-          )}
+          </Replay>
+
+          <div className="panel">
+            <div className="ptitle" style={{ flexWrap: 'wrap' }}>
+              <span className="h3">{step === 1 ? 'Its ten outputs' : step === 2 ? 'Each output against its goal' : 'Its outputs, before and after'}</span>
+              {adjusted && (
+                <div className="chips" role="group" aria-label="Which outputs to show">
+                  <button className="chip" aria-pressed={show === 'before'} onClick={() => setShow('before')}>
+                    Before
+                  </button>
+                  <button className="chip" aria-pressed={show === 'after'} onClick={() => setShow('after')}>
+                    After
+                  </button>
+                </div>
+              )}
+            </div>
+            <GoalBars yHat={adjusted && show === 'after' ? c.after.yHat : c.before.yHat} goals={step >= 2} />
+            {step >= 2 && (
+              <p className="body" style={{ marginTop: 12 }} aria-live="polite">
+                {adjusted && show === 'after' ? (
+                  <>
+                    After the correction it says {c.guessAfter}, and the mistake is{' '}
+                    <span className="mono">{fmt(c.lossAfter)}</span>, down from <span className="mono">{fmt(c.lossBefore)}</span>.
+                    Every output moved a little toward its goal.
+                  </>
+                ) : (
+                  <>
+                    The blue tick is each output&rsquo;s goal, and the gap is how far the output is from it. The mistake
+                    sums up all ten gaps in one number: <span className="mono">{fmt(c.lossBefore)}</span>.
+                  </>
+                )}
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="panel sec">
-        <div className="ptitle" style={{ flexWrap: 'wrap' }}>
-          <span className="h3">What changed in hidden layer 1</span>
-          {showChanges && (
-            <span className="small">
-              {c.inkPixels} ink pixels × {c.firing1} firing neurons = {thousands(c.changedFromPixels)} connections
-            </span>
+      {adjusted && (
+        <div className="panel sec">
+          <div className="h3" style={{ marginBottom: 12 }}>
+            A closer look at what changed
+          </div>
+
+          <p className="body" aria-live="polite">
+            {guess === 'ink' ? 'You predicted it: only ' : 'Here is what happened: only '}
+            connections from the {c.inkPixels} pixels with ink changed. Not one connection from a blank pixel did.
+          </p>
+
+          <WhyBlank why={why} setWhy={setWhy} changed={c.changed} />
+
+          {why !== null && (
+            <>
+              <p className="callout" style={{ marginTop: 16 }}>
+                The rule: a connection changes only if it played a part in the mistake. That means something flowed
+                through it, and the neuron it feeds was firing. A blank pixel sends 0, and a silent neuron passes nothing
+                on, so either way that connection is left alone.
+              </p>
+
+              <OneConnection c={c} one={one} />
+
+              <div className="sub" style={{ margin: '20px 0 8px' }}>
+                Where the changes landed: the connections from the pixels into hidden layer 1
+              </div>
+              <div className="seen-layout">
+                <div>
+                  <PixelImage image={example} size={140} label={`The ${LABEL} it saw`} />
+                  <p className="small" style={{ marginTop: 8 }}>
+                    The {LABEL} it saw
+                  </p>
+                </div>
+                <div>
+                  <ChangeGrid c={c} />
+                  <p className="body" style={{ marginTop: 12 }}>
+                    Each square is one neuron in hidden layer 1, and shows how its 784 connections from the pixels
+                    changed: blue ones now push it up more, orange ones push it down more. The changes trace the{' '}
+                    {LABEL}&rsquo;s ink, and the {16 - c.firing1} silent neurons didn&rsquo;t change at all. That is{' '}
+                    {c.inkPixels} ink pixels × {c.firing1} firing neurons = {thousands(c.changedFromPixels)} connections.
+                    The other {thousands(c.changed - c.changedFromPixels)} changes are deeper in the network.
+                  </p>
+                </div>
+              </div>
+
+              <p className="body l2-scale">
+                <b>One correction is only a nudge.</b> This one happened to be enough to fix this {LABEL}, but a single
+                example can&rsquo;t teach it every digit. Practice is {thousands(1875)} rounds of this, each on 32 examples at once.
+                That is what turned layer 1&rsquo;s &ldquo;before practice&rdquo; into its &ldquo;after practice&rdquo;.
+              </p>
+            </>
           )}
         </div>
-        {showChanges ? (
-          <div className="seen-layout">
-            <div>
-              <PixelImage image={example} size={140} label={`The ${LABEL} it saw`} />
-              <p className="small" style={{ marginTop: 8 }}>
-                The {LABEL} it saw
-              </p>
-            </div>
-            <div>
-              <ChangeGrid c={c} />
-              <p className="body" style={{ marginTop: 12 }}>
-                Each square shows how one neuron&rsquo;s 784 connections changed: blue got more exciting, orange more
-                inhibiting. Changes appear only where the {LABEL} has ink, and the {16 - c.firing1} silent neurons
-                didn&rsquo;t change at all.
-              </p>
-            </div>
-          </div>
-        ) : (
-          <p className="body">This appears at step 3 of the replay, once you&rsquo;ve picked which connections will change.</p>
-        )}
-      </div>
+      )}
 
       <div className="sec">
         <SayItCard
@@ -179,44 +228,61 @@ function Ready({ example }: { example: Float32Array }) {
           Back to layer 1
         </a>
         <a className="btn" href={href('layer-3')}>
-          Go deeper: layer 3 zooms in on one connection
+          Go deeper: layer 3
         </a>
       </div>
     </>
   )
 }
 
-function Replay({ c, step, setStep, locked }: { c: Correction; step: number; setStep: (s: number) => void; locked: boolean }) {
-  const y7 = c.before.yHat[LABEL]
+function Replay({
+  c,
+  step,
+  setStep,
+  locked,
+  children,
+}: {
+  c: Correction
+  step: number
+  setStep: (s: number) => void
+  locked: boolean
+  /** The prediction, asked between measuring and adjusting. */
+  children: ReactNode
+}) {
   const top = c.before.yHat[c.guessBefore]
+  const wrong = c.guessBefore !== LABEL
   const steps = [
-    {
-      title: 'Situation',
-      text: `A ${LABEL} from its training examples. The goal: the ${LABEL} output should fire and the other nine should stay quiet.`,
-    },
     {
       title: 'Guess',
       text: (
         <>
-          It says {c.guessBefore} (<span className="mono">{fmt(top, 2)}</span>).{' '}
-          {c.guessBefore === LABEL ? (
-            <>That&rsquo;s right, but not by much.</>
-          ) : (
-            <>
-              The {LABEL} output is {top - y7 < 0.1 ? 'just behind, at' : 'only'} <span className="mono">{fmt(y7, 2)}</span>.
-            </>
-          )}{' '}
-          The mistake, the average of the ten squared gaps, is <span className="mono">{fmt(c.lossBefore)}</span>.
+          It&rsquo;s shown the {LABEL}, but not told the answer. The 784 numbers flow through its layers, just as in layer
+          1, and its biggest output is {c.guessBefore} (<span className="mono">{fmt(top, 2)}</span>). Its connection
+          strengths are still random, so {wrong ? 'the guess is wrong' : 'a right guess is only luck'}.
         </>
       ),
     },
     {
-      title: 'Adjustment',
+      title: 'Measure the mistake',
       text: (
         <>
-          Connections that pushed toward {LABEL} get stronger, and connections that pushed toward wrong digits get
-          weaker. Only {thousands(c.changed)} of the {thousands(c.total)} numbers change. After this one step it says{' '}
-          {c.guessAfter}, and the mistake drops to <span className="mono">{fmt(c.lossAfter)}</span>.
+          Now the right answer is revealed: {LABEL}. That sets a goal for every output: 1 for the {LABEL}, and 0 for the
+          other nine. The <b>mistake</b> is one number that sums up how far all ten outputs are from their goals. 0 would
+          be perfect. Here it is <span className="mono">{fmt(c.lossBefore)}</span>.
+          <span className="small" style={{ display: 'block', marginTop: 6 }}>
+            (It&rsquo;s the average of the ten gaps, each squared. Layer 3 uses that.)
+          </span>
+        </>
+      ),
+    },
+    {
+      title: 'Adjust',
+      text: (
+        <>
+          Each connection strength that played a part in the mistake is changed a little, in the direction that would have
+          made the mistake smaller. {thousands(c.changed)} of the network&rsquo;s {thousands(c.total)} adjustable numbers
+          changed; almost all of those numbers are connection strengths. Afterwards it says {c.guessAfter} for this{' '}
+          {LABEL}.
         </>
       ),
     },
@@ -224,8 +290,8 @@ function Replay({ c, step, setStep, locked }: { c: Correction; step: number; set
   return (
     <div className="panel">
       <div className="ptitle">
-        <span className="h3">Replay one correction</span>
-        <span className="small">Step {step} of 3</span>
+        <span className="h3">Replay one round</span>
+        <span className="small">Part {step} of 3</span>
       </div>
       <ol className="steps" style={{ listStyle: 'none' }}>
         {steps.map((s, i) => {
@@ -237,6 +303,7 @@ function Replay({ c, step, setStep, locked }: { c: Correction; step: number; set
               <div>
                 <div className="tt">{s.title}</div>
                 {n <= step && <div className="tx">{s.text}</div>}
+                {n === 2 && step >= 2 && children}
               </div>
             </li>
           )
@@ -248,15 +315,15 @@ function Replay({ c, step, setStep, locked }: { c: Correction; step: number; set
         </button>
         {step === 1 && (
           <button className="btn sm" onClick={() => setStep(2)}>
-            Next
+            Next: measure the mistake
           </button>
         )}
         {step === 2 && locked && (
           <button className="btn sm" onClick={() => setStep(3)}>
-            Next
+            Next: adjust
           </button>
         )}
-        {step === 2 && !locked && <span className="small">Pick which connections will change, below.</span>}
+        {step === 2 && !locked && <span className="small">Make your prediction above to continue.</span>}
         {step === 3 && (
           <button className="btn sm" onClick={() => setStep(1)}>
             Replay
@@ -267,22 +334,91 @@ function Replay({ c, step, setStep, locked }: { c: Correction; step: number; set
   )
 }
 
+const GUESSES: [Guess, string][] = [
+  ['ink', 'Only from pixels with ink'],
+  ['blank', 'Only from blank pixels'],
+  ['both', 'From both'],
+]
+
+function Prediction({
+  guess,
+  setGuess,
+  locked,
+  lockIn,
+}: {
+  guess: Guess | null
+  setGuess: (g: Guess) => void
+  locked: boolean
+  lockIn: () => void
+}) {
+  return (
+    <div className="l2-predict">
+      <div className="pk" id="pick-q">
+        {locked ? 'Your prediction' : 'Predict before it adjusts'}
+      </div>
+      <p className="body">
+        Every pixel is connected to hidden layer 1. Which of those connections do you think will change?
+        {!locked && ' Think back to layer 1: what does a blank pixel send?'}
+      </p>
+      <div className="chips" role="group" aria-labelledby="pick-q">
+        {GUESSES.map(([g, label]) => (
+          <button key={g} className="chip" aria-pressed={guess === g} disabled={locked} onClick={() => setGuess(g)}>
+            {label}
+            {locked && guess === g && (g === 'ink' ? <RightIcon /> : <WrongIcon />)}
+          </button>
+        ))}
+      </div>
+      {!locked && (
+        <button className="btn sm" style={{ alignSelf: 'flex-start' }} disabled={guess === null} onClick={lockIn}>
+          Lock in and adjust
+        </button>
+      )}
+    </div>
+  )
+}
+
+/** The ten outputs as bars, like layer 1's, with each one's goal and gap once the answer is known. */
+function GoalBars({ yHat, goals }: { yHat: ArrayLike<number>; goals: boolean }) {
+  const guess = predict(yHat)
+  return (
+    <div className="gbars" role="list" aria-label="Its ten outputs">
+      {Array.from({ length: 10 }, (_, d) => {
+        const v = yHat[d]
+        const goal = d === LABEL ? 1 : 0
+        return (
+          <div className={`grow${d === guess ? ' top' : ''}`} key={d} role="listitem">
+            <span className="dg">{d}</span>
+            <div className="tr">
+              <i style={{ width: `${(v * 100).toFixed(1)}%` }} />
+              {goals && <span className="goal" style={{ left: `${goal * 100}%` }} />}
+            </div>
+            <span className="vv">{fmt(v, 2)}</span>
+            <span className="nt">
+              {goals ? `goal ${goal} · gap ${fmt(Math.abs(v - goal), 2)}` : d === guess ? 'its guess' : ''}
+            </span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 const WHY = [
-  'Those pixels were 0, so they had no part in the mistake',
-  'They were already right',
-  'It changes one connection at a time',
+  'A blank pixel sent 0, so its connections played no part in the mistake',
+  'Those connections were already right',
+  'It can only change one connection at a time',
 ]
 
 function WhyBlank({ why, setWhy, changed }: { why: number | null; setWhy: (i: number) => void; changed: number }) {
   const feedback = [
-    'Yes. A connection’s change is scaled by what flowed through it, and nothing flowed from a blank pixel.',
-    'Not quite. Their strengths are as random as every other connection’s. They didn’t change because nothing flowed through them: a blank pixel is 0.',
-    `Not quite. This one step changed ${thousands(changed)} numbers at once. Blank pixels’ connections were left out because nothing flowed from them.`,
+    'Yes. A connection’s change depends on what flowed through it, and nothing flowed from a blank pixel.',
+    'Not quite. Their strengths are as random as every other connection’s. They didn’t change because nothing flowed through them: a blank pixel sends 0.',
+    `Not quite. This one correction changed ${thousands(changed)} numbers at once. Blank pixels’ connections were left out because nothing flowed through them.`,
   ]
   return (
-    <div className="panel">
-      <div className="q" style={{ marginBottom: 12 }} id="why-q">
-        Why didn&rsquo;t the connections from blank pixels change?
+    <div className="l2-why">
+      <div className="q" style={{ marginBottom: 12, fontSize: 18 }} id="why-q">
+        Why do you think the connections from blank pixels didn&rsquo;t change?
       </div>
       <div className="opts" role="radiogroup" aria-labelledby="why-q">
         {WHY.map((label, i) => (
@@ -305,6 +441,42 @@ function WhyBlank({ why, setWhy, changed }: { why: number | null; setWhy: (i: nu
           {feedback[why]}
         </p>
       )}
+    </div>
+  )
+}
+
+/** One connection's strength before and after: the concrete case behind "connection strengths change". */
+function OneConnection({ c, one }: { c: Correction; one: Connection }) {
+  const at = one.to * PIXELS + one.from
+  const before = c.start.layers[0].weights[at]
+  const after = c.network.layers[0].weights[at]
+  const name = neuronName(1, one.to)
+  const row = Math.floor(one.from / IMAGE_SIDE) + 1
+  const col = (one.from % IMAGE_SIDE) + 1
+  return (
+    <div className="l2-one">
+      <div className="sub">One connection, before and after</div>
+      <div className="l2-one-row">
+        <div className="fbox2">
+          <span className="fl">before</span>
+          <span className="fv mono">{fmt(before)}</span>
+        </div>
+        <span className="fop" aria-hidden="true">
+          →
+        </span>
+        <div className="fbox2 changed">
+          <span className="fl">after</span>
+          <span className="fv mono">{fmt(after)}</span>
+        </div>
+        <p className="body">
+          This is the strength of the connection from the pixel at row {row}, column {col} to neuron {name} in hidden layer
+          1: the outlined line in the diagram. It went {after > before ? 'up' : 'down'} by{' '}
+          <span className="mono">{fmt(Math.abs(after - before))}</span>, so that pixel now pushes neuron {name}{' '}
+          {after > before ? (after > 0 ? 'up a little more' : 'down a little less') : after < 0 ? 'down a little more' : 'up a little less'}.
+          That small change to a number is what learning
+          physically is. This correction made {thousands(c.changed)} of them.
+        </p>
+      </div>
     </div>
   )
 }

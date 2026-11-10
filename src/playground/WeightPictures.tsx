@@ -54,7 +54,7 @@ export function WeightPictures({ network, round }: { network: Network; round: nu
       </div>
       <WeightGrid network={network} />
       <p className="small" style={{ marginTop: 10 }}>
-        Each square is one neuron&rsquo;s 784 connections from the pixels. Blue pixels excite it, orange pixels inhibit it.
+        Each square is one neuron&rsquo;s 784 connections from the pixels. Blue pixels push it up, orange pixels push it down.
       </p>
     </div>
   )

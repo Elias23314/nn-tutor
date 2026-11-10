@@ -32,7 +32,7 @@ const RUNGS: Rung[] = [
   },
   {
     n: '2',
-    question: 'What physically changes when it learns?',
+    question: 'What changes inside it when it learns?',
     name: 'How it works',
     tag: 'No math',
     blurb: 'Slow one correction down and see which of its 13,002 numbers change.',

@@ -10,6 +10,7 @@ export function LayerHead({
   title,
   lede,
   loopOn = [],
+  loop = LOOP,
   loopCaption,
 }: {
   n: number
@@ -19,6 +20,8 @@ export function LayerHead({
   lede: string
   /** Loop stages to highlight. */
   loopOn?: string[]
+  /** The stages to show, when a page describes the loop in its own words. */
+  loop?: string[]
   /** Leave out to hide the learning loop, on a page that doesn't cover it yet. */
   loopCaption?: string
 }) {
@@ -35,8 +38,8 @@ export function LayerHead({
       </div>
       {loopCaption && (
       <div className="loop">
-        <div className="row" aria-label={`The learning loop: ${LOOP.join(', then ')}`}>
-          {LOOP.map((s, i) => (
+        <div className="row" aria-label={`The learning loop: ${loop.join(', then ')}`}>
+          {loop.map((s, i) => (
             <span key={s} style={{ display: 'contents' }}>
               {i > 0 && (
                 <span className="la" aria-hidden="true">
