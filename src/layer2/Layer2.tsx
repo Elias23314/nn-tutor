@@ -25,7 +25,8 @@ export function Layer2() {
         name="How it works"
         tag="No math"
         title="What changes inside it when it learns?"
-        lede="In layer 1, practice turned a wrong guess into a right one. Practice is one small routine, repeated thousands of times: show it a digit along with the right answer, see what it guesses, measure how wrong it was, and adjust. This page slows down a single round."
+        soFar="A neural network turns a picture into numbers, passes them through layers of neurons, and its biggest output is its guess. At the end of layer 1, practice turned a wrong guess into a right one."
+        lede="So what is practice? One small routine, repeated thousands of times: show it a digit along with the right answer, see what it guesses, measure how wrong it was, and adjust. This page slows down a single round."
         loop={ROUND}
         loopCaption="One round of practice. The replay below walks through it."
       />
@@ -89,8 +90,8 @@ function Ready({ example }: { example: Float32Array }) {
     <>
       <p className="body l2-note">
         This {LABEL} is one of the 60,000 examples it practices on, so it&rsquo;s a different {LABEL} from layer 1&rsquo;s.
-        Every one of those examples comes with the right answer attached. The network here hasn&rsquo;t practiced at all
-        yet.
+        Every one of those examples comes with the right answer attached: that is what &ldquo;labeled&rdquo; meant in
+        layer 1. The network here hasn&rsquo;t practiced at all yet.
       </p>
 
       <div className="grid2">
@@ -282,7 +283,7 @@ function Replay({
           Each connection strength that played a part in the mistake is changed a little, in the direction that would have
           made the mistake smaller. {thousands(c.changed)} of the network&rsquo;s {thousands(c.total)} adjustable numbers
           changed; almost all of those numbers are connection strengths. Afterwards it says {c.guessAfter} for this{' '}
-          {LABEL}.
+          {LABEL}. This adjustment is called a <b>correction</b>.
         </>
       ),
     },

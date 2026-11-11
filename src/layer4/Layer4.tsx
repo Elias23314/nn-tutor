@@ -26,7 +26,8 @@ export function Layer4() {
         name="The math"
         tag="Calc I"
         title="How does it get that number without nudging?"
-        lede="The chain rule gives the steepness exactly. A connection into an output has one path to the mistake; deeper connections add up many."
+        soFar="For one connection, the slope says which way to move and the learning rate says how far. In layer 3 you found the slope by nudging the connection and watching the mistake."
+        lede="Nudging 13,002 connections one at a time would be far too slow. The chain rule gives the slope exactly. A connection into an output has one path to the mistake; deeper connections add up many."
         loopOn={['Find the slope']}
         loopCaption="This layer finds the slope exactly"
       />
@@ -201,14 +202,14 @@ function walkSteps(ch: OutputChain, name: string, source: string): WalkStep[] {
       text: (
         <>
           Read <span className="mono">∂L/∂w</span> as &ldquo;how much does the mistake L change when the strength w of{' '}
-          {name} changes a little?&rdquo; It&rsquo;s the steepness you measured in layer 3 by nudging. The chain rule gets
+          {name} changes a little?&rdquo; It&rsquo;s the slope you measured in layer 3 by nudging. The chain rule gets
           it exactly, by following the route from w to L through the network.
         </>
       ),
     },
     {
       title: 'First, the forward pass',
-      stages: ['Predict', 'Measure'],
+      stages: ['Guess', 'Measure the mistake'],
       focus: 'forward',
       formula: 'w → z₇ = … + w·a → ŷ₇ = σ(z₇) → L',
       text: (
@@ -268,13 +269,13 @@ function walkSteps(ch: OutputChain, name: string, source: string): WalkStep[] {
         <>
           Each factor turns one small change into the next: a change in w becomes {n(ch.dzdw)}× as big in z₇, then{' '}
           {n(ch.dydz)}× that in ŷ₇, then {n(ch.dLdy, 4)}× that in L. Chaining them gives the gradient, {n(ch.gradient, 4)}:
-          the same steepness layer 3 found by nudging, but exact.
+          the same slope layer 3 found by nudging, but exact.
         </>
       ),
     },
     {
       title: 'Use it: take the step',
-      stages: ['Step', 'Repeat'],
+      stages: ['Take a step', 'Repeat'],
       focus: 'step',
       formula: `w ← w − η · ∂L/∂w = ${fmt(ch.w, 4)} − ${DEFAULT_ETA} × (${fmt(ch.gradient, 4)}) = ${fmt(after, 4)}`,
       text: (
@@ -348,7 +349,7 @@ const WORDS: [string, string, string][] = [
   ['strength', 'weight', 'w'],
   ['firing', 'activation', 'a'],
   ['mistake', 'loss', 'L'],
-  ['steepness', 'gradient', '∂L/∂w'],
+  ['slope', 'gradient', '∂L/∂w'],
 ]
 
 function Vocabulary() {

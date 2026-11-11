@@ -238,9 +238,3 @@
   border: 1.5px solid var(--excite);
   box-shadow: 0 0 0 3px #dbe6fd;
 }
-@media (min-width: 1101px) {
-  .sticky-col {
-    position: sticky;
-    top: 16px;
-  }
-}

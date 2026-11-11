@@ -1,13 +1,14 @@
 // Pieces every layer page shares, from the mockups.
 import { useId, useState, type ReactNode } from 'react'
 
-const LOOP = ['Predict', 'Measure', 'Find the slope', 'Step', 'Repeat']
+const LOOP = ['Guess', 'Measure the mistake', 'Find the slope', 'Take a step', 'Repeat']
 
 export function LayerHead({
   n,
   name,
   tag,
   title,
+  soFar,
   lede,
   loopOn = [],
   loop = LOOP,
@@ -17,6 +18,8 @@ export function LayerHead({
   name: string
   tag: string
   title: string
+  /** What the earlier layers established, for anyone arriving here (including straight from the top bar). */
+  soFar?: string
   lede: string
   /** Loop stages to highlight. */
   loopOn?: string[]
@@ -34,6 +37,11 @@ export function LayerHead({
           <span className="tag">{tag}</span>
         </div>
         <h1>{title}</h1>
+        {soFar && (
+          <p className="so-far">
+            <b>So far:</b> {soFar}
+          </p>
+        )}
         <p className="lede">{lede}</p>
       </div>
       {loopCaption && (

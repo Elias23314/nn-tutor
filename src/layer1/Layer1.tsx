@@ -69,7 +69,7 @@ function Ready({ state, image, send }: { state: Snapshot; image: Float32Array; s
           accepts={(t) => /number|value|input|digit/i.test(t)}
           next={{
             label: 'Layer 2: How it works',
-            text: 'Practice changed its guess from wrong to right, and nobody wrote the right connection strengths in. Layer 2 slows down a single correction, so you can see exactly what changes inside the network when it gets something wrong.',
+            text: 'Practice changed its guess from wrong to right, and nobody wrote the right connection strengths in. So what does practice actually do? Layer 2 slows down a single round of it, so you can see exactly what changes inside the network when it gets something wrong.',
           }}
         />
       </div>
