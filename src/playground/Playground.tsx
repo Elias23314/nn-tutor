@@ -31,7 +31,7 @@ export function Playground() {
         </div>
         {status.kind === 'ready' && <Stats state={status.state} />}
       </div>
-      {status.kind === 'loading' && <p className="notice">Loading 70,000 handwritten digits…</p>}
+      {status.kind === 'loading' && <p className="notice">Loading 70,000 handwritten digits: 60,000 for it to practice on, and 10,000 kept aside to test it on digits it has never seen…</p>}
       {status.kind === 'error' && (
         <p className="notice" role="alert">
           Couldn&rsquo;t start the network: {status.message}

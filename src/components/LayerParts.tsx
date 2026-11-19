@@ -190,13 +190,13 @@ export function SayItCard({
   )
 }
 
-/** "Quick check from the last layer": recall one word from the previous layer's sentence. */
+/** "Quick check from the last part": recall one word from the previous layer's sentence. */
 export function QuickCheck({ before, after, options, answer }: { before: string; after: string; options: string[]; answer: string }) {
   const [picked, setPicked] = useState<string | null>(null)
   const right = picked === answer
   return (
-    <div className="retr" role="group" aria-label="Quick check from the last layer">
-      <span className="k">Quick check from the last layer</span>
+    <div className="retr" role="group" aria-label="Quick check from the last part">
+      <span className="k">Quick check from the last part</span>
       <span>
         {before}___{after}
       </span>

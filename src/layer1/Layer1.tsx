@@ -30,7 +30,7 @@ export function Layer1() {
         title="What is a neural network?"
         lede="This one has a single job: look at a handwritten digit and say which digit it is. Follow one 7 from picture to guess."
       />
-      {status.kind === 'loading' && <p className="notice">Loading 70,000 handwritten digits…</p>}
+      {status.kind === 'loading' && <p className="notice">Loading 70,000 handwritten digits: 60,000 for it to practice on, and 10,000 kept aside to test it on digits it has never seen…</p>}
       {status.kind === 'error' && (
         <p className="notice" role="alert">
           Couldn&rsquo;t start the network: {status.message}
@@ -65,11 +65,11 @@ function Ready({ state, image, send }: { state: Snapshot; image: Float32Array; s
         <SayItCard
           before="A neural network turns a picture into "
           answer="numbers"
-          after=", passes them through layers of connected neurons, and its biggest output is its guess."
-          accepts={(t) => /number|value|input|digit/i.test(t)}
+          after=", sends them along weighted connections through layers of neurons, and its biggest output is its guess."
+          accepts={(t) => /number|value|input|pixel/i.test(t)}
           next={{
-            label: 'Layer 2: How it works',
-            text: 'Practice changed its guess from wrong to right, and nobody wrote the right connection strengths in. So what does practice actually do? Layer 2 slows down a single round of it, so you can see exactly what changes inside the network when it gets something wrong.',
+            label: 'Part 2: How it works',
+            text: 'Practice changed its guess from wrong to right, and nobody wrote the right weights in. So what does practice actually do? Part 2 slows down a single round of it, so you can see exactly what changes inside the network when it gets something wrong.',
           }}
         />
       </div>
@@ -79,7 +79,7 @@ function Ready({ state, image, send }: { state: Snapshot; image: Float32Array; s
           Back to start here
         </a>
         <a className="btn" href={href('layer-2')}>
-          Go deeper: layer 2
+          Go deeper: part 2
         </a>
       </div>
     </>

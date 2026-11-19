@@ -1,4 +1,4 @@
-// Layer 1, step 2: the list of 784 numbers becomes the network's 784 inputs.
+// Part 1, step 2: each of the 784 inputs reaches every first-layer neuron along a weighted connection.
 import { IMAGE_SIDE, PIXELS, neuronName, type ForwardResult, type Network } from '../engine/network'
 import { fmt, thousands } from '../playground/connection'
 
@@ -170,27 +170,30 @@ export function InputLayer({
 
       <div className="inputs-text">
         <p className="body">
-          Each number in the list gets its own slot, called an <b>input</b>. The pixel you picked (row {row + 1}, column{' '}
-          {col + 1}) is input <b>#{thousands(pick + 1)}</b>, and it holds <span className="mono">{fmt(v, 2)}</span>.
+          Every input is wired to all 16 <b>neurons</b> in the network&rsquo;s first layer (step 3 shows what a neuron
+          does). Each wire is a <b>connection</b>, and each connection has its own <b>weight</b>.
         </p>
         <p className="body">
-          Every input is wired to all 16 neurons in the network&rsquo;s first layer. Each wire is a <b>connection</b>, and
-          each connection has a <b>strength</b>: a number that decides how much of the input gets through, and whether it
-          pushes that neuron up (blue) or down (orange, dashed).
+          A weight is a setting on one connection. It decides how much the input counts, and which way it pushes the
+          neuron at the other end: up (blue) or down (orange, dashed). A big weight makes the input matter a lot; a weight
+          near zero means the neuron mostly ignores it.
         </p>
         <p className="body">
           {v === 0 ? (
             <>
-              Your pixel is blank paper, so it sends <span className="mono">0</span> along its 16 connections. Whatever
-              their strengths, it adds nothing.
+              Your pixel (input #{thousands(pick + 1)}) is blank paper, so it sends <span className="mono">0</span> along
+              its 16 connections. Whatever their weights, it adds nothing.
             </>
           ) : (
             <>
-              Your pixel sends its <span className="mono">{fmt(v, 2)}</span> along its 16 connections: thicker lines push
-              harder.
+              Your pixel (input #{thousands(pick + 1)}) sends its <span className="mono">{fmt(v, 2)}</span> along its 16
+              connections. Thicker lines are bigger weights, so they push harder.
             </>
-          )}{' '}
-          With 784 inputs and 16 neurons, that&rsquo;s 784 × 16 = {thousands(PIXELS * 16)} connections.
+          )}
+        </p>
+        <p className="body">
+          With 784 inputs and 16 neurons, that&rsquo;s 784 × 16 = {thousands(PIXELS * 16)} weights into this layer alone.
+          Nobody sets them by hand: they start out random, and <b>learning means adjusting the weights</b>.
         </p>
       </div>
     </div>

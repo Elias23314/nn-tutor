@@ -24,9 +24,9 @@ export function Layer4() {
       <LayerHead
         n={4}
         name="The math"
-        tag="Calc I"
+        tag="Calculus"
         title="How does it get that number without nudging?"
-        soFar="For one connection, the slope says which way to move and the learning rate says how far. In layer 3 you found the slope by nudging the connection and watching the mistake."
+        soFar="For one connection, the slope says which way to move and the learning rate says how far. In part 3 you found the slope by nudging the connection and watching the mistake."
         lede="Nudging 13,002 connections one at a time would be far too slow. The chain rule gives the slope exactly. A connection into an output has one path to the mistake; deeper connections add up many."
         loopOn={['Find the slope']}
         loopCaption="This layer finds the slope exactly"
@@ -89,7 +89,7 @@ function Ready({ example }: { example: Float32Array }) {
                   ]
   const caption =
     focus === 'want'
-      ? `The outlined line is ${name}: its strength is w. ∂L/∂w asks how much the mistake changes when w changes a little.`
+      ? `The outlined line is ${name}: its weight is w. ∂L/∂w asks how much the mistake changes when w changes a little.`
       : focus === 'forward'
         ? `Forward: ${source}’s firing flows along ${name} into the ${LABEL} output, and the outputs set the mistake.`
         : focus === 1
@@ -100,7 +100,7 @@ function Ready({ example }: { example: Float32Array }) {
               ? `Factor 3 lives at neuron ${source}: how hard it fires, which is what flows along ${name}.`
               : focus === 'all'
                 ? `Backward along the path: from the mistake, through the ${LABEL} output, along ${name} to ${source}, multiplying as it goes.`
-                : `The step: ${name} gets stronger, from ${fmt(ch.w, 3)} to ${fmt(after, 3)}.`
+                : `The step: the weight of ${name} goes up, from ${fmt(ch.w, 3)} to ${fmt(after, 3)}.`
 
   return (
     <>
@@ -171,7 +171,7 @@ function Ready({ example }: { example: Float32Array }) {
 
       <div className="exits">
         <a className="btn sec" href={href('layer-3')}>
-          Back to layer 3
+          Back to part 3
         </a>
         <a className="btn" href={href('playground')}>
           Try it in the playground
@@ -201,8 +201,8 @@ function walkSteps(ch: OutputChain, name: string, source: string): WalkStep[] {
       formula: '∂L/∂w = ?',
       text: (
         <>
-          Read <span className="mono">∂L/∂w</span> as &ldquo;how much does the mistake L change when the strength w of{' '}
-          {name} changes a little?&rdquo; It&rsquo;s the slope you measured in layer 3 by nudging. The chain rule gets
+          Read <span className="mono">∂L/∂w</span> as &ldquo;how much does the mistake L change when the weight w of{' '}
+          {name} changes a little?&rdquo; It&rsquo;s the slope you measured in part 3 by nudging. The chain rule gets
           it exactly, by following the route from w to L through the network.
         </>
       ),
@@ -214,7 +214,7 @@ function walkSteps(ch: OutputChain, name: string, source: string): WalkStep[] {
       formula: 'w → z₇ = … + w·a → ŷ₇ = σ(z₇) → L',
       text: (
         <>
-          {source} fires a = {n(ch.a)}. That flows along {name}, multiplied by its strength w, into the {LABEL}{' '}
+          {source} fires a = {n(ch.a)}. That flows along {name}, multiplied by its weight w, into the {LABEL}{' '}
           output&rsquo;s weighted sum z₇ = {n(ch.z)}. The sigmoid σ squeezes it into the output ŷ₇ = {n(ch.yHat)}. The
           mistake compares all ten outputs with their goals: L = {n(ch.loss, 4)}. So w reaches the mistake in three links:
           w → z₇ → ŷ₇ → L.
@@ -256,7 +256,7 @@ function walkSteps(ch: OutputChain, name: string, source: string): WalkStep[] {
         <>
           Step back along {name} to neuron {source}. The weighted sum includes w × a, so nudging w changes z₇ by a times as
           much: {source}&rsquo;s firing, {n(ch.a)}. If {source} were silent (a = 0), this factor, and the whole gradient,
-          would be 0. Those are layer 2&rsquo;s &ldquo;no change&rdquo; connections.
+          would be 0. Those are part 2&rsquo;s &ldquo;no change&rdquo; connections.
         </>
       ),
     },
@@ -269,7 +269,7 @@ function walkSteps(ch: OutputChain, name: string, source: string): WalkStep[] {
         <>
           Each factor turns one small change into the next: a change in w becomes {n(ch.dzdw)}× as big in z₇, then{' '}
           {n(ch.dydz)}× that in ŷ₇, then {n(ch.dLdy, 4)}× that in L. Chaining them gives the gradient, {n(ch.gradient, 4)}:
-          the same slope layer 3 found by nudging, but exact.
+          the same slope part 3 found by nudging, but exact.
         </>
       ),
     },
@@ -280,8 +280,8 @@ function walkSteps(ch: OutputChain, name: string, source: string): WalkStep[] {
       formula: `w ← w − η · ∂L/∂w = ${fmt(ch.w, 4)} − ${DEFAULT_ETA} × (${fmt(ch.gradient, 4)}) = ${fmt(after, 4)}`,
       text: (
         <>
-          The gradient is negative, so subtracting it makes {name} stronger, which lifts the {LABEL} output toward its goal.
-          η is the learning rate from layer 3. Backpropagation does this for all 13,002 connections at once, then the loop
+          The gradient is negative, so subtracting it raises the weight of {name}, which lifts the {LABEL} output toward its goal.
+          η is the learning rate from part 3. Backpropagation does this for all 13,002 connections at once, then the loop
           repeats with the next examples.
         </>
       ),
@@ -346,7 +346,7 @@ function Walkthrough({ steps, step, setStep }: { steps: WalkStep[]; step: number
 }
 
 const WORDS: [string, string, string][] = [
-  ['strength', 'weight', 'w'],
+  ['weight', 'weight (already the formal word)', 'w'],
   ['firing', 'activation', 'a'],
   ['mistake', 'loss', 'L'],
   ['slope', 'gradient', '∂L/∂w'],
@@ -357,7 +357,7 @@ function Vocabulary() {
     <div className="panel">
       <div className="ptitle" style={{ flexWrap: 'wrap' }}>
         <span className="h3">Same ideas, formal names</span>
-        <span className="small">Words from layers 1–3, then the term, then the symbol</span>
+        <span className="small">Words from parts 1–3, then the term, then the symbol</span>
       </div>
       <div className="vocab">
         {WORDS.map(([word, term, sym]) => (
@@ -392,7 +392,7 @@ function OnePath({
   // The walkthrough's forward step shows the forward view; its factor steps show the backward one.
   const dir = focus === 'forward' ? 'forward' : typeof focus === 'number' || focus === 'all' ? 'backward' : chosen
   const nodes = [
-    { sym: 'w', value: fmt(ch.w, 4), cap: `strength of ${name}` },
+    { sym: 'w', value: fmt(ch.w, 4), cap: `weight of ${name}` },
     { sym: 'z₇', value: fmt(ch.z, 3), cap: 'weighted sum into 7' },
     { sym: 'ŷ₇', value: fmt(ch.yHat, 3), cap: '7 output' },
     { sym: 'L', value: fmt(ch.loss, 4), cap: 'mistake' },
@@ -486,7 +486,7 @@ function OnePath({
       <p className="small">
         {back
           ? 'Backward: the error signal starts at the mistake and is multiplied by each local slope on the way back.'
-          : 'Forward: the strength sets the weighted sum, the sigmoid turns it into the output, and the output sets the mistake.'}
+          : 'Forward: the weight sets the weighted sum, the sigmoid turns it into the output, and the output sets the mistake.'}
       </p>
     </div>
   )
@@ -509,7 +509,7 @@ function ChainRule({
   const factors: { n: Factor; sym: string; work: string; value: number; digits: number; what: string }[] = [
     { n: 1, sym: '∂L/∂ŷ₇', work: `(2/10)(${fmt(ch.yHat, 3)} − 1)`, value: ch.dLdy, digits: 4, what: `How the mistake responds to the ${LABEL} output` },
     { n: 2, sym: '∂ŷ₇/∂z₇', work: `${fmt(ch.yHat, 3)} × ${fmt(1 - ch.yHat, 3)}`, value: ch.dydz, digits: 4, what: 'How the sigmoid output responds to its weighted sum' },
-    { n: 3, sym: '∂z₇/∂w', work: 'a', value: ch.dzdw, digits: 3, what: `How the weighted sum responds to the strength: ${source}’s firing` },
+    { n: 3, sym: '∂z₇/∂w', work: 'a', value: ch.dzdw, digits: 3, what: `How the weighted sum responds to the weight: ${source}’s firing` },
   ]
   const hover = (n: Factor) => ({
     onMouseEnter: () => setHover(n),
@@ -574,7 +574,7 @@ function Update({ net, x, c, ch, on }: { net: Network; x: Float32Array; c: Conne
         w ← {fmt(ch.w, 4)} − {DEFAULT_ETA} × ({fmt(ch.gradient, 4)}) = {fmt(ch.w - DEFAULT_ETA * ch.gradient, 4)}
       </p>
       <p className="small" style={{ marginTop: 10 }}>
-        Layer 3 measured <span className="mono">{fmt(nudged, 5)}</span> by nudging. The chain rule gives the exact value,{' '}
+        Part 3 measured <span className="mono">{fmt(nudged, 5)}</span> by nudging. The chain rule gives the exact value,{' '}
         <span className="mono">{fmt(ch.gradient, 5)}</span>.
       </p>
     </div>
@@ -591,7 +591,7 @@ function CheckYourself({ ch }: { ch: OutputChain }) {
   const links: { n: Factor; label: string }[] = [
     { n: 1, label: 'Link 1: mistake ← 7 output' },
     { n: 2, label: 'Link 2: 7 output ← weighted sum' },
-    { n: 3, label: 'Link 3: weighted sum ← strength' },
+    { n: 3, label: 'Link 3: weighted sum ← weight' },
   ]
   const [placed, setPlaced] = useState<Record<number, number>>({})
   const [checked, setChecked] = useState(false)
@@ -643,7 +643,7 @@ function CheckYourself({ ch }: { ch: OutputChain }) {
         {checked && (
           <span className="body" aria-live="polite">
             {score === 3
-              ? 'All three right. The firing sits next to the strength, the sigmoid’s slope in the middle, the mistake’s slope at the end.'
+              ? 'All three right. The firing sits next to the weight, the sigmoid’s slope in the middle, the mistake’s slope at the end.'
               : `${score} of 3 right. The link nearest the mistake is how the mistake responds to the output: (2/10)(ŷ − 1).`}
           </span>
         )}
@@ -837,7 +837,7 @@ function Zeros({ net, x }: { net: Network; x: Float32Array }) {
         )}
       </div>
       <p className="small" style={{ marginTop: 12 }}>
-        These are layer 2&rsquo;s &ldquo;no change&rdquo; connections.
+        These are part 2&rsquo;s &ldquo;no change&rdquo; connections.
       </p>
     </div>
   )
@@ -897,7 +897,7 @@ function YourTurn({ net, x, c, source }: { net: Network; x: Float32Array; c: Con
       {checked && (
         <p className="feedback" aria-live="polite">
           {checked.f && checked.r
-            ? `Right: ${fmt(ch.gradient, 4)}. It’s positive, so gradient descent weakens ${source} → ${wrong}, which lowers the wrong output.`
+            ? `Right: ${fmt(ch.gradient, 4)}. It’s positive, so the step lowers the weight of ${source} → ${wrong}, which lowers the wrong output.`
             : !checked.f
               ? `Not quite. Factor 3 is ${source}’s firing, ${fmt(ch.dzdw, 3)}, the same as for ${source} → ${LABEL}.`
               : `Factor 3 is right. Multiply all three: (${fmt(ch.dLdy, 3)})(${fmt(ch.dydz, 3)})(${fmt(ch.dzdw, 3)}) = ${fmt(ch.gradient, 4)}.`}

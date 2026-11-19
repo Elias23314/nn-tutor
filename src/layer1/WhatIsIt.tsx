@@ -1,5 +1,5 @@
 // Layer 1: what a neural network is, and how a handwritten digit becomes the numbers it reads.
-import { useMemo, useState, type KeyboardEvent } from 'react'
+import { useMemo, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { IMAGE_SIDE, PIXELS, forward, neuronName, predict, type ForwardResult, type Network } from '../engine/network'
 import { fmt, thousands } from '../playground/connection'
 import { NetworkDiagram } from '../playground/NetworkDiagram'
@@ -43,12 +43,21 @@ export interface Practice {
 /** The whole route, shown before the steps fill it in. */
 const ROUTE: [string, string][] = [
   ['A picture', 'a handwritten digit'],
-  ['784 numbers', 'step 1'],
-  ['784 inputs', 'step 2'],
-  ['Layers of neurons', 'step 3'],
+  ['784 inputs', 'step 1'],
+  ['Weights', 'step 2'],
+  ['Neurons', 'step 3'],
   ['10 outputs', 'step 4'],
   ['Its guess', 'the biggest output'],
 ]
+
+/** The line at the end of a step that hands the reader on to the next one. */
+function Bridge({ children }: { children: ReactNode }) {
+  return (
+    <p className="bridge">
+      <span aria-hidden="true">↓</span> {children}
+    </p>
+  )
+}
 
 export function WhatIsIt({
   image,
@@ -72,9 +81,10 @@ export function WhatIsIt({
   return (
     <section className="intro">
       <p className="body intro-lede">
-        A neural network is a program that turns numbers into other numbers. Nobody writes its rules. Instead it has
-        thousands of adjustable <b>connection strengths</b>, and practice tunes them. This one takes in a picture of a
-        handwritten digit and gives back ten numbers, one for each digit it could be.
+        A neural network is a computer model inspired by the human brain. Through a series of interconnected pieces it
+        learns patterns from data to map inputs to outputs. It is the foundation of what we think of as modern AI
+        systems. In the example we will look at, it is given a large number of images of handwritten digits and learns
+        patterns to correctly identify which digit it is being given.
       </p>
 
       <ol className="route" aria-label="The route from a picture to a guess">
@@ -96,24 +106,58 @@ export function WhatIsIt({
       <div className="panel">
         <div className="ptitle" style={{ flexWrap: 'wrap' }}>
           <span className="h3">
-            <span className="fnum-lg">1</span> A digit becomes 784 numbers
+            <span className="fnum-lg">1</span> Input: the picture becomes 784 numbers
           </span>
           <span className="pick-hint">Click any pixel to pick it</span>
         </div>
         <PixelNumbers image={image} digit={digit} pick={pick} setPick={setPick} />
+        <Bridge>
+          Those 784 inputs now travel into the network along connections, and every connection has a <b>weight</b>.
+          That&rsquo;s step 2.
+        </Bridge>
       </div>
 
       <div className="panel sec">
         <div className="ptitle" style={{ flexWrap: 'wrap' }}>
           <span className="h3">
-            <span className="fnum-lg">2</span> The 784 numbers become its 784 inputs
+            <span className="fnum-lg">2</span> Weights: how much each input counts
           </span>
           <span className="small">The pixel you picked above is highlighted</span>
         </div>
         <InputLayer image={image} network={network} fwd={fwd} pick={pick} />
+        <Bridge>
+          Each of those 16 neurons now has 784 weighted inputs arriving at once. What it does with them is step 3.
+        </Bridge>
       </div>
 
       <div className="grid2 sec">
+        <div className="panel">
+          <div className="h3" style={{ marginBottom: 10 }}>
+            <span className="fnum-lg">3</span> Neurons: add it all up, then fire or stay silent
+          </div>
+          <p className="body">
+            A <b>neuron</b> collects every weighted input arriving at it and adds them up, along with a starting number of
+            its own (called its <b>bias</b>, which practice adjusts too). If the total is positive, it <b>fires</b> and
+            passes the total on. If not, it stays <b>silent</b> and passes on 0.
+          </p>
+          <NeuronSum image={image} network={network} fwd={fwd} pick={pick} neuron={neuron} setNeuron={setNeuron} />
+          <p className="body" style={{ marginTop: 12 }}>
+            The neurons sit in layers, and each layer&rsquo;s outputs are the next layer&rsquo;s inputs:
+          </p>
+          <ul className="intro-list body">
+            <li>
+              <b>Hidden layer 1:</b> 16 neurons, each with a weighted connection from all 784 inputs.
+            </li>
+            <li>
+              <b>Hidden layer 2:</b> 16 neurons, each with a weighted connection from all 16 neurons of hidden layer 1.
+            </li>
+          </ul>
+          <p className="body" style={{ marginTop: 10 }}>
+            &ldquo;Hidden&rdquo; only means you never see those layers from outside: just pixels in, ten numbers out. The
+            diagram shows the whole route.
+          </p>
+          <Bridge>After hidden layer 2 comes the last layer of neurons: the outputs. That&rsquo;s step 4.</Bridge>
+        </div>
         <NetworkDiagram
           title={null}
           network={network}
@@ -123,33 +167,10 @@ export function WhatIsIt({
           marks={[{ layer: 1, index: neuron }]}
           caption={`The ${digit} flowing through the whole network. To keep it readable, only the strongest connection into each neuron is drawn. The outlined line runs from your pixel to neuron ${neuronName(1, neuron)}.`}
         />
-        <div className="stack">
-          <div className="panel">
-            <div className="h3" style={{ marginBottom: 10 }}>
-              <span className="fnum-lg">3</span> The numbers flow through layers of neurons
-            </div>
-            <p className="body">
-              A <b>neuron</b> takes in numbers, multiplies each one by the strength of its connection, and adds them up. If
-              the total is positive it <b>fires</b> and passes the total on. If not, it stays <b>silent</b> and passes on 0.
-            </p>
-            <NeuronSum image={image} network={network} fwd={fwd} pick={pick} neuron={neuron} setNeuron={setNeuron} />
-            <ul className="intro-list body">
-              <li>
-                <b>Hidden layer 1:</b> 16 neurons, each connected to all 784 inputs.
-              </li>
-              <li>
-                <b>Hidden layer 2:</b> 16 neurons, each connected to all of hidden layer 1.
-              </li>
-              <li>
-                <b>Outputs:</b> 10 neurons, one per digit. Each gives a number between 0 and 1.
-              </li>
-            </ul>
-            <p className="body" style={{ marginTop: 10 }}>
-              &ldquo;Hidden&rdquo; only means you never see those layers from outside: just pixels in, ten numbers out.
-            </p>
-          </div>
-          <Outputs fwd={fwd} digit={digit} practice={practice} />
-        </div>
+      </div>
+
+      <div className="sec">
+        <Outputs fwd={fwd} digit={digit} practice={practice} />
       </div>
     </section>
   )
@@ -191,12 +212,14 @@ function NeuronSum({
         ))}
       </div>
       <p className="body" aria-live="polite">
-        Neuron {name} receives all 784 inputs. From your pixel (input #{thousands(pick + 1)}) it gets{' '}
+        Neuron {name} receives all 784 inputs. From your pixel (input #{thousands(pick + 1)}) it gets the pixel&rsquo;s
+        value times the weight:{' '}
         <span className="mono">
-          {fmt(v, 2)} × {fmt(w, 3)} = {fmt(v * w, 3)}
+          {fmt(v, 2)} × {fmt(w, 4)} = {fmt(v * w, 4)}
         </span>
-        . Only the {inked} inputs with ink add anything; the other {PIXELS - inked} are 0. Adding it all up, along with a
-        small starting amount of the neuron&rsquo;s own, the total is <span className="mono">{fmt(z, 2)}</span>, so it{' '}
+        {v === 0 ? ' (blank paper sends nothing, whatever the weight)' : w < 0 ? ' (a negative weight pushes down)' : ' (a positive weight pushes up)'}
+        . Only the {inked} inputs with ink add anything; the other {PIXELS - inked} are 0. Adding it all up, along with its
+        bias, the total is <span className="mono">{fmt(z, 2)}</span>, so it{' '}
         {a > 0 ? (
           <>
             <b>fires</b> and passes <span className="mono">{fmt(a, 2)}</span> on to hidden layer 2.
@@ -215,11 +238,15 @@ function Outputs({ fwd, digit, practice }: { fwd: ForwardResult; digit: number; 
   const guess = predict(fwd.yHat)
   const { view, setView, round, total } = practice
   const practicing = view === 'after' && round < total
+  // When the top two scores round to the same value, show enough digits to see which is ahead.
+  let second = guess === 0 ? 1 : 0
+  for (let d = 0; d < 10; d++) if (d !== guess && fwd.yHat[d] > fwd.yHat[second]) second = d
+  const close = fwd.yHat[guess] - fwd.yHat[second] < 0.01
   return (
     <div className="panel">
       <div className="ptitle" style={{ flexWrap: 'wrap' }}>
         <span className="h3">
-          <span className="fnum-lg">4</span> The biggest output is its guess
+          <span className="fnum-lg">4</span> Output: the biggest score is its guess
         </span>
         <div className="chips" role="group" aria-label="Which network to show">
           <button className="chip" aria-pressed={view === 'before'} onClick={() => setView('before')}>
@@ -231,28 +258,40 @@ function Outputs({ fwd, digit, practice }: { fwd: ForwardResult; digit: number; 
         </div>
       </div>
       <p className="body" style={{ marginBottom: 12 }}>
-        Each bar is one output. Close to 1 means &ldquo;I think it&rsquo;s this digit&rdquo;; close to 0 means &ldquo;I
-        don&rsquo;t&rdquo;.
+        The last layer has 10 neurons, one for each digit from 0 to 9. They work like the others with one difference:
+        instead of firing or staying silent, each one squeezes its total into a <b>score</b> between 0 and 1. Close to 1
+        means &ldquo;I think it&rsquo;s this digit&rdquo;; close to 0 means &ldquo;I don&rsquo;t&rdquo;. Each bar is one
+        score, and the biggest score is its guess.
       </p>
       <OutputBars yHat={fwd.yHat} />
+      {practicing && <progress className="practice-progress" max={total} value={round} aria-label="Practice progress" />}
       <p className="body" style={{ marginTop: 12 }} aria-live="polite">
         {view === 'before' ? (
           <>
-            Before any practice, its connection strengths are random. Every output sits near 0.5, and its guess for this{' '}
-            {digit} is {guess}
-            {guess === digit ? ', which is only luck.' : ': wrong.'} Switch to <b>After practice</b> to see the same network
-            once it has learned.
+            Before any practice, its weights are random, so every score sits near 0.5. Its guess for this {digit} is{' '}
+            {guess}
+            {close && (
+              <>
+                {' '}
+                (<span className="mono">{fmt(fwd.yHat[guess], 3)}</span>, just ahead of {second} at{' '}
+                <span className="mono">{fmt(fwd.yHat[second], 3)}</span>)
+              </>
+            )}
+            {guess === digit ? ', which is only luck.' : ': wrong.'} <b>Practice</b> is the learning from the top of the
+            page: show it handwritten digits with the right answer attached, and adjust its weights a little after each
+            guess. Switch to <b>After practice</b> to watch it happen.
           </>
         ) : practicing ? (
           <>
-            Practicing: round {thousands(round)} of {thousands(total)}. Right now it says {guess} (
+            Practicing: round {thousands(round)} of {thousands(total)}. Each round shows it 32 digits, so{' '}
+            {thousands(total)} rounds covers all 60,000. Right now it says {guess} (
             <span className="mono">{fmt(fwd.yHat[guess], 2)}</span>).
           </>
         ) : (
           <>
-            After practicing on 60,000 labeled examples, it says {guess} (
+            After practicing on 60,000 handwritten digits with the right answer attached, it says {guess} (
             <span className="mono">{fmt(fwd.yHat[guess], 2)}</span>) for this {digit}. Nobody rewrote it: the only things
-            that changed are its connection strengths. Layer 2 shows how.
+            that changed are its weights and biases. Part 2 shows how.
           </>
         )}
       </p>
@@ -356,8 +395,9 @@ function PixelNumbers({
           for full ink, and in-between for the soft edges of the pen stroke.
         </p>
         <p className="body">
-          Read row by row, the picture becomes one long list of {thousands(PIXELS)} numbers. Your pixel is number{' '}
-          <b>{thousands(pick + 1)}</b>:
+          Read row by row, the picture becomes one long list of {thousands(PIXELS)} numbers. Your pixel, row {row + 1}{' '}
+          column {col + 1}, is number <b>{thousands(pick + 1)}</b> (the {row} full {row === 1 ? 'row' : 'rows'} of 28 before it, then{' '}
+          {col + 1} more):
         </p>
         <div className="numlist mono" aria-hidden="true">
           {list[0] > 0 && <span className="dots">…</span>}
@@ -368,6 +408,9 @@ function PixelNumbers({
           ))}
           {list.at(-1)! < PIXELS - 1 && <span className="dots">…</span>}
         </div>
+        <p className="body">
+          Each number in the list is one <b>input</b> to the network: 784 numbers, 784 inputs.
+        </p>
         <p className="callout">
           That list is all the network ever sees. It has no idea the numbers came from a picture, or which ones were next
           to each other.

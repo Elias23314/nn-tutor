@@ -121,6 +121,8 @@ interface Props {
   dimOthers?: boolean
   /** Panel heading; null for none. */
   title?: string | null
+  /** Show the key to line and circle styles; off where the reader hasn't met those words yet. */
+  legend?: boolean
   caption: ReactNode
 }
 
@@ -137,6 +139,7 @@ export function NetworkDiagram({
   marks = [],
   dimOthers = false,
   title = 'The network',
+  legend = true,
   caption,
 }: Props) {
   const [describe, setDescribe] = useState(false)
@@ -317,7 +320,7 @@ export function NetworkDiagram({
           </text>
         ))}
       </svg>
-      <div className="legend">
+      {legend && <div className="legend">
         <span className="i">
           <svg width="34" height="12" aria-hidden="true">
             <line x1="1" y1="6" x2="33" y2="6" stroke="var(--excite)" strokeWidth="3" />
@@ -342,7 +345,7 @@ export function NetworkDiagram({
           </svg>
           silent
         </span>
-      </div>
+      </div>}
       {changed && (
         <div className="legend" style={{ marginTop: 6 }}>
           <span className="i">

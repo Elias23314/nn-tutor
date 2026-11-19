@@ -35,16 +35,16 @@ export function Layer3() {
         name="With numbers"
         tag="Arithmetic"
         title="How much should one connection change?"
-        soFar="One round of practice is guess, measure the mistake, adjust. Adjusting changes the connection strengths that played a part in the mistake, a little, in the direction that makes the mistake smaller."
+        soFar="One round of practice is guess, measure the mistake, adjust. Adjusting changes the weights that played a part in the mistake, a little, in the direction that makes the mistake smaller."
         lede="But which direction is that, and how big should the change be? This page works it out, with arithmetic, for a single connection."
         loopOn={['Find the slope', 'Take a step']}
-        loopCaption="Layer 2’s “Adjust” is really two parts: find the slope, then take a step"
+        loopCaption="Part 2’s “Adjust” is really two parts: find the slope, then take a step"
       />
       <QuickCheck
         before="Learning means changing "
         after="."
-        options={['the examples', 'connection strengths', 'the rules']}
-        answer="connection strengths"
+        options={['the examples', 'weights', 'the rules']}
+        answer="weights"
       />
       {status.kind === 'loading' && <p className="notice">Loading its training examples…</p>}
       {status.kind === 'error' && (
@@ -57,7 +57,7 @@ export function Layer3() {
   )
 }
 
-type Direction = 'stronger' | 'weaker' | 'same'
+type Direction = 'increase' | 'decrease' | 'same'
 
 /** Everything the page shows about one strength of the focus connection. */
 function measure(net: Network, x: Float32Array, c: Connection, w: number) {
@@ -68,7 +68,7 @@ function measure(net: Network, x: Float32Array, c: Connection, w: number) {
     fwd,
     mistake,
     nudged,
-    /** The slope measured by nudging: change in mistake ÷ change in strength. */
+    /** The slope measured by nudging: change in mistake ÷ change in weight. */
     slope: (nudged - mistake) / NUDGE,
     nudges: [0.1, 0.01, 0.001].map((h) => [h, nudgeSlope(net, x, LABEL, c, w, h)] as const),
     exact: exactSlope(net, x, LABEL, c, w),
@@ -99,7 +99,7 @@ function Ready({ example }: { example: Float32Array }) {
     l.weights[c.to * l.inSize + c.from] = 1
     return g
   }, [net, c])
-  const right: Direction = start.exact < 0 ? 'stronger' : start.exact > 0 ? 'weaker' : 'same'
+  const right: Direction = start.exact < 0 ? 'increase' : start.exact > 0 ? 'decrease' : 'same'
 
   return (
     <>
@@ -177,18 +177,18 @@ function Ready({ example }: { example: Float32Array }) {
           after=" that way, over and over."
           accepts={(t) => /step|move|change|nudge|jump|adjust/i.test(t)}
           next={{
-            label: 'Layer 4: The math',
-            text: 'Nudging works for one connection, but this network has 13,002, and testing each one separately would be far too slow. Layer 4 shows how the chain rule finds every slope exactly, in a single pass backward through the network.',
+            label: 'Part 4: The math',
+            text: 'Nudging works for one connection, but this network has 13,002, and testing each one separately would be far too slow. Part 4 shows how the chain rule finds every slope exactly, in a single pass backward through the network.',
           }}
         />
       </div>
 
       <div className="exits">
         <a className="btn sec" href={href('layer-2')}>
-          Back to layer 2
+          Back to part 2
         </a>
         <a className="btn" href={href('layer-4')}>
-          Go deeper: layer 4
+          Go deeper: part 4
         </a>
       </div>
     </>
@@ -258,17 +258,17 @@ function ByHand({
       <p className="body">
         We&rsquo;ll hold every other connection still and watch just one: from neuron {source} in hidden layer 2 to the{' '}
         {LABEL} output, written <b>{name}</b>. It&rsquo;s a good one to study: {source} fires hardest for this {LABEL}, and
-        the connection leads straight to the {LABEL} output. This is the same {LABEL} as layer 2, before any practice.
+        the connection leads straight to the {LABEL} output. This is the same {LABEL} as part 2, before any practice.
       </p>
       <p className="body" style={{ marginTop: 10 }}>
-        The connection passes on {source}&rsquo;s firing multiplied by its <b>strength</b>. Follow it through to the
+        The connection passes on {source}&rsquo;s firing multiplied by its <b>weight</b>. Follow it through to the
         mistake:
       </p>
 
       <div className="flow" aria-live="polite">
         {box(`${source} fires`, fmt(firing, 2))}
         <span className="fop">×</span>
-        {box('strength', fmt(w), moved)}
+        {box('weight', fmt(w), moved)}
         <span className="fop">=</span>
         {box(`push into ${LABEL}`, fmt(push), moved)}
         <span className="fop">→</span>
@@ -292,14 +292,14 @@ function ByHand({
           )}
         </div>
         <p className="body">
-          The {LABEL} output is at {fmt(y0, 3)} and its goal is 1. To shrink the mistake, should {name} get stronger or
-          weaker?
+          The {LABEL} output is at {fmt(y0, 3)} and its goal is 1. To shrink the mistake, should the weight of {name} go up or
+          down?
         </p>
         <div className="chips" role="group" aria-labelledby="dir-q">
           {(
             [
-              ['stronger', 'Stronger'],
-              ['weaker', 'Weaker'],
+              ['increase', 'Increase'],
+              ['decrease', 'Decrease'],
               ['same', 'Stay the same'],
             ] as const
           ).map(([d, label]) => (
@@ -319,14 +319,14 @@ function ByHand({
       {locked && (
         <>
           <div className="hand" style={{ marginTop: 16 }}>
-            <button className="btn sec sm" aria-label={`Weaken ${name} by ${NUDGE}`} onClick={() => setW(snap(w - NUDGE))}>
+            <button className="btn sec sm" aria-label={`Decrease the weight of ${name} by ${NUDGE}`} onClick={() => setW(snap(w - NUDGE))}>
               −
             </button>
             <div className="hand-val">
               <span className="mono">{fmt(w)}</span>
-              <span className="small">Strength of {name}</span>
+              <span className="small">Weight of {name}</span>
             </div>
-            <button className="btn sec sm" aria-label={`Strengthen ${name} by ${NUDGE}`} onClick={() => setW(snap(w + NUDGE))}>
+            <button className="btn sec sm" aria-label={`Increase the weight of ${name} by ${NUDGE}`} onClick={() => setW(snap(w + NUDGE))}>
               +
             </button>
           </div>
@@ -337,19 +337,19 @@ function ByHand({
             max={w0 + 4}
             step={NUDGE}
             value={w}
-            aria-label={`Strength of ${name}`}
+            aria-label={`Weight of ${name}`}
             onChange={(e) => setW(Number(e.target.value))}
           />
 
           <p className="body" style={{ marginTop: 8 }} aria-live="polite">
             {!moved ? (
               <>
-                Now test your prediction. Press <b>+</b> to make it a little stronger, or <b>−</b> to make it weaker, and
-                watch the boxes above. Each press moves the strength by {NUDGE}.
+                Now test your prediction. Press <b>+</b> to raise the weight a little, or <b>−</b> to lower it, and
+                watch the boxes above. Each press moves the weight by {NUDGE}.
               </>
             ) : (
               <>
-                {stronger ? 'Stronger' : 'Weaker'}: {source} now pushes <span className="mono">{fmt(push)}</span> into the{' '}
+                {stronger ? 'Increased' : 'Decreased'}: {source} now pushes <span className="mono">{fmt(push)}</span> into the{' '}
                 {LABEL} output instead of <span className="mono">{fmt(push0)}</span>, so the {LABEL} output went{' '}
                 {y7 > y0 ? 'up' : 'down'} from <span className="mono">{fmt(y0, 3)}</span> to{' '}
                 <span className="mono">{fmt(y7, 3)}</span>, {y7 > y0 ? 'closer to' : 'further from'} its goal of 1. The
@@ -361,7 +361,7 @@ function ByHand({
             )}
           </p>
           <p className="bigger">
-            <b>The bigger picture:</b> this is 1 of the network&rsquo;s {thousands(13_002)} adjustable numbers. Layer
+            <b>The bigger picture:</b> this is 1 of the network&rsquo;s {thousands(13_002)} adjustable numbers. Part
             2&rsquo;s &ldquo;Adjust&rdquo; is what you just did, done automatically for every one of them: find which
             direction makes the mistake smaller, and move that way. The parts below turn that into arithmetic.
           </p>
@@ -382,11 +382,11 @@ function FindSlope({ name, w, now }: { name: string; w: number; now: Measured })
       </div>
       <p className="body">
         Nudging told you which direction helps. The <b>slope</b> turns that into a number: how much the mistake changes
-        for each unit you strengthen {name}. Measure it with one small nudge:
+        for each unit you raise the weight of {name}. Measure it with one small nudge:
       </p>
       <ol className="arith" style={{ marginTop: 10 }}>
         <li>
-          <span className="k">Nudge the strength</span>
+          <span className="k">Nudge the weight</span>
           <span className="v">
             <span className="mono">
               {fmt(w)} → {fmt(w + NUDGE)}
@@ -406,7 +406,7 @@ function FindSlope({ name, w, now }: { name: string; w: number; now: Measured })
         <li>
           <span className="k">Divide</span>
           <span className="v">
-            slope = change in mistake ÷ change in strength
+            slope = change in mistake ÷ change in weight
             <br />
             <span className="mono">
               {signed(diff, 5)} ÷ {NUDGE} ≈ <b>{fmt(now.slope, 4)}</b>
@@ -415,7 +415,7 @@ function FindSlope({ name, w, now }: { name: string; w: number; now: Measured })
         </li>
       </ol>
       <p className="body" style={{ marginTop: 12 }} aria-live="polite">
-        The slope is {down ? 'negative' : 'positive'}: {down ? 'strengthening' : 'weakening'} {name} makes the mistake{' '}
+        The slope is {down ? 'negative' : 'positive'}: {down ? 'raising' : 'lowering'} the weight of {name} makes the mistake{' '}
         smaller. {down ? 'A positive slope would mean the opposite.' : 'A negative slope would mean the opposite.'} Its size
         says how strongly the mistake responds. On the chart, it&rsquo;s the tilt of the dashed blue line.
       </p>
@@ -430,7 +430,7 @@ function FindSlope({ name, w, now }: { name: string; w: number; now: Measured })
           </div>
         ))}
         <p className="small" style={{ marginTop: 10 }}>
-          Smaller nudges get closer to the exact slope, <span className="mono">{fmt(now.exact, 5)}</span>. Layer 4 shows how
+          Smaller nudges get closer to the exact slope, <span className="mono">{fmt(now.exact, 5)}</span>. Part 4 shows how
           the network gets that exact value without nudging at all.
         </p>
       </details>
@@ -470,7 +470,7 @@ function TakeStep({
         <span className="fnum-lg">3</span> Take a step
       </div>
       <p className="body">
-        Now use the slope. To make the mistake smaller, move the strength the <b>opposite</b> way to the slope: that is
+        Now use the slope. To make the mistake smaller, move the weight the <b>opposite</b> way to the slope: that is
         what the minus sign does. How far to move is set by the <b>learning rate</b>, a number that says how boldly it
         steps.
       </p>
@@ -510,7 +510,7 @@ function TakeStep({
           </>
         ) : (
           <>
-            After {steps} step{steps === 1 ? '' : 's'}, the strength is <span className="mono">{fmt(w)}</span> and the
+            After {steps} step{steps === 1 ? '' : 's'}, the weight is <span className="mono">{fmt(w)}</span> and the
             mistake is <span className="mono">{fmt(now.mistake, 5)}</span>, down from{' '}
             <span className="mono">{fmt(start.mistake, 5)}</span>. The slope is now{' '}
             <span className="mono">{fmt(now.slope, 4)}</span>
@@ -583,7 +583,7 @@ function Downhill({
         <span className="h3">The same thing as a picture</span>
       </div>
       <p className="body" style={{ marginBottom: 10 }}>
-        Each point on the curve is the mistake for one strength of {name}, with everything else held still. Lower is
+        Each point on the curve is the mistake for one weight of {name}, with everything else held still. Lower is
         better. The dot is where the connection is now, the dashed line shows the slope there, and the arrow is the step
         it would take: downhill.
       </p>
@@ -661,7 +661,7 @@ function Downhill({
           </text>
         </g>
         <text x={(PAD.l + CW - PAD.r) / 2} y={CH - 10} fontSize={12} fill="var(--muted)" textAnchor="middle">
-          Strength of {name}
+          Weight of {name}
         </text>
         <text x={14} y={(PAD.t + CH - PAD.b) / 2} fontSize={12} fill="var(--muted)" textAnchor="middle" transform={`rotate(-90 14 ${(PAD.t + CH - PAD.b) / 2})`}>
           Mistake
@@ -730,22 +730,22 @@ function YourTurn({ slope }: { slope: number }) {
         <div className="chips" role="group" aria-labelledby="flip-q">
           {(
             [
-              ['stronger', 'Get stronger'],
-              ['weaker', 'Get weaker'],
+              ['increase', 'Go up'],
+              ['decrease', 'Go down'],
               ['same', 'Stay the same'],
             ] as const
           ).map(([d, label]) => (
-            <button key={d} className="chip" aria-pressed={flip === d} disabled={flip === 'weaker'} onClick={() => setFlip(d)}>
+            <button key={d} className="chip" aria-pressed={flip === d} disabled={flip === 'decrease'} onClick={() => setFlip(d)}>
               {label}
-              {flip === d && (d === 'weaker' ? <RightIcon /> : <WrongIcon />)}
+              {flip === d && (d === 'decrease' ? <RightIcon /> : <WrongIcon />)}
             </button>
           ))}
         </div>
         {flip !== null && (
           <p className="feedback" aria-live="polite">
-            {flip === 'weaker'
-              ? 'Right. A positive slope means strengthening makes the mistake bigger, so the step goes the other way: −(learning rate) × (a positive slope) is negative, and the connection gets weaker.'
-              : 'Not quite. A positive slope means strengthening makes the mistake bigger. The step always goes the opposite way to the slope. Try again.'}
+            {flip === 'decrease'
+              ? 'Right. A positive slope means raising the weight makes the mistake bigger, so the step goes the other way: −(learning rate) × (a positive slope) is negative, and the weight goes down.'
+              : 'Not quite. A positive slope means raising the weight makes the mistake bigger. The step always goes the opposite way to the slope. Try again.'}
           </p>
         )}
       </div>

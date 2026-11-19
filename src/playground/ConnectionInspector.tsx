@@ -53,7 +53,9 @@ export function ConnectionInspector({ network, initialNetwork, fwd, selected, on
         <p className="body" style={{ fontSize: 15.5 }}>
           This connection carries {source}&rsquo;s {selected.layer === 0 ? 'ink' : 'firing'} to {target}.{' '}
           {now >= 0 ? `It excites: when ${src} is active, ${target} is pushed up.` : `It inhibits: when ${src} is active, ${target} is pushed down.`}{' '}
-          Practice has made it {Math.abs(now) > Math.abs(start) ? 'stronger' : 'weaker'} than at the start.{' '}
+          {Math.abs(now - start) < 1e-9
+            ? 'Its weight hasn’t changed since the start.'
+            : `Its weight is now ${Math.abs(now) > Math.abs(start) ? 'bigger' : 'smaller'} in size than at the start.`}{' '}
           {flow === 0
             ? `For your digit ${src} is ${selected.layer === 0 ? 'blank' : 'silent'}, so this connection plays no part.`
             : `For your digit it ${push > 0 ? 'pushes up' : 'pushes down'} by ${fmt(Math.abs(push), 2)}.`}
@@ -63,11 +65,11 @@ export function ConnectionInspector({ network, initialNetwork, fwd, selected, on
       {tab === 'numbers' && (
         <>
           <div className="kv">
-            <span>Strength now</span>
+            <span>Weight now</span>
             <span className="m">{fmt(now)}</span>
           </div>
           <div className="kv">
-            <span>Strength at the start</span>
+            <span>Weight at the start</span>
             <span className="m">{fmt(start)}</span>
           </div>
           <div className="kv">
@@ -102,19 +104,19 @@ export function ConnectionInspector({ network, initialNetwork, fwd, selected, on
       )}
 
       <div className="btns" style={{ marginTop: 12, gap: 8 }}>
-        <button className="iconbtn" aria-label="Weaker by 0.1" onClick={() => onSetWeight(now - STEP)}>
+        <button className="iconbtn" aria-label="Decrease the weight by 0.1" onClick={() => onSetWeight(now - STEP)}>
           −
         </button>
         <input
           className="field"
-          aria-label={`Strength of ${connectionLabel(selected)}`}
+          aria-label={`Weight of ${connectionLabel(selected)}`}
           value={draft ?? fmt(now)}
           onFocus={() => setDraft(fmt(now))}
           onChange={(e) => setDraft(e.target.value)}
           onBlur={commit}
           onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
         />
-        <button className="iconbtn" aria-label="Stronger by 0.1" onClick={() => onSetWeight(now + STEP)}>
+        <button className="iconbtn" aria-label="Increase the weight by 0.1" onClick={() => onSetWeight(now + STEP)}>
           +
         </button>
       </div>

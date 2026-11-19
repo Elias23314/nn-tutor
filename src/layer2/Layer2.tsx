@@ -25,7 +25,7 @@ export function Layer2() {
         name="How it works"
         tag="No math"
         title="What changes inside it when it learns?"
-        soFar="A neural network turns a picture into numbers, passes them through layers of neurons, and its biggest output is its guess. At the end of layer 1, practice turned a wrong guess into a right one."
+        soFar="A neural network turns a picture into numbers, passes them through layers of neurons, and its biggest output is its guess. At the end of part 1, practice turned a wrong guess into a right one."
         lede="So what is practice? One small routine, repeated thousands of times: show it a digit along with the right answer, see what it guesses, measure how wrong it was, and adjust. This page slows down a single round."
         loop={ROUND}
         loopCaption="One round of practice. The replay below walks through it."
@@ -89,9 +89,9 @@ function Ready({ example }: { example: Float32Array }) {
   return (
     <>
       <p className="body l2-note">
-        This {LABEL} is one of the 60,000 examples it practices on, so it&rsquo;s a different {LABEL} from layer 1&rsquo;s.
+        This {LABEL} is one of the 60,000 examples it practices on, so it&rsquo;s a different {LABEL} from part 1&rsquo;s.
         Every one of those examples comes with the right answer attached: that is what &ldquo;labeled&rdquo; meant in
-        layer 1. The network here hasn&rsquo;t practiced at all yet.
+        part 1. The network here hasn&rsquo;t practiced at all yet.
       </p>
 
       <div className="grid2">
@@ -204,7 +204,7 @@ function Ready({ example }: { example: Float32Array }) {
               <p className="body l2-scale">
                 <b>One correction is only a nudge.</b> This one happened to be enough to fix this {LABEL}, but a single
                 example can&rsquo;t teach it every digit. Practice is {thousands(1875)} rounds of this, each on 32 examples at once.
-                That is what turned layer 1&rsquo;s &ldquo;before practice&rdquo; into its &ldquo;after practice&rdquo;.
+                That is what turned part 1&rsquo;s &ldquo;before practice&rdquo; into its &ldquo;after practice&rdquo;.
               </p>
             </>
           )}
@@ -214,22 +214,22 @@ function Ready({ example }: { example: Float32Array }) {
       <div className="sec">
         <SayItCard
           before="Learning means changing "
-          answer="connection strengths"
+          answer="weights"
           after=": after a mistake, only the connections that played a part in it change."
           accepts={(t) => /connection|weight|strength|synap/i.test(t)}
           next={{
-            label: 'Layer 3: With numbers',
-            text: 'So a correction changes connection strengths, but by how much, and in which direction? Layer 3 zooms in on one connection. You’ll nudge it by hand, measure how the mistake responds, and work out the step it should take.',
+            label: 'Part 3: With numbers',
+            text: 'So a correction changes weights, but by how much, and in which direction? Part 3 zooms in on one connection. You’ll nudge it by hand, measure how the mistake responds, and work out the step it should take.',
           }}
         />
       </div>
 
       <div className="exits">
         <a className="btn sec" href={href('layer-1')}>
-          Back to layer 1
+          Back to part 1
         </a>
         <a className="btn" href={href('layer-3')}>
-          Go deeper: layer 3
+          Go deeper: part 3
         </a>
       </div>
     </>
@@ -257,9 +257,9 @@ function Replay({
       title: 'Guess',
       text: (
         <>
-          It&rsquo;s shown the {LABEL}, but not told the answer. The 784 numbers flow through its layers, just as in layer
-          1, and its biggest output is {c.guessBefore} (<span className="mono">{fmt(top, 2)}</span>). Its connection
-          strengths are still random, so {wrong ? 'the guess is wrong' : 'a right guess is only luck'}.
+          It&rsquo;s shown the {LABEL}, but not told the answer. The 784 numbers flow through its layers, just as in part
+          1, and its biggest output is {c.guessBefore} (<span className="mono">{fmt(top, 2)}</span>). Its weights are
+          still random, so {wrong ? 'the guess is wrong' : 'a right guess is only luck'}.
         </>
       ),
     },
@@ -271,7 +271,7 @@ function Replay({
           other nine. The <b>mistake</b> is one number that sums up how far all ten outputs are from their goals. 0 would
           be perfect. Here it is <span className="mono">{fmt(c.lossBefore)}</span>.
           <span className="small" style={{ display: 'block', marginTop: 6 }}>
-            (It&rsquo;s the average of the ten gaps, each squared. Layer 3 uses that.)
+            (It&rsquo;s the average of the ten gaps, each squared. Part 3 uses that.)
           </span>
         </>
       ),
@@ -280,9 +280,9 @@ function Replay({
       title: 'Adjust',
       text: (
         <>
-          Each connection strength that played a part in the mistake is changed a little, in the direction that would have
+          Each weight that played a part in the mistake is changed a little, in the direction that would have
           made the mistake smaller. {thousands(c.changed)} of the network&rsquo;s {thousands(c.total)} adjustable numbers
-          changed; almost all of those numbers are connection strengths. Afterwards it says {c.guessAfter} for this{' '}
+          changed; almost all of those numbers are weights (the rest are biases). Afterwards it says {c.guessAfter} for this{' '}
           {LABEL}. This adjustment is called a <b>correction</b>.
         </>
       ),
@@ -359,7 +359,7 @@ function Prediction({
       </div>
       <p className="body">
         Every pixel is connected to hidden layer 1. Which of those connections do you think will change?
-        {!locked && ' Think back to layer 1: what does a blank pixel send?'}
+        {!locked && ' Think back to part 1: what does a blank pixel send?'}
       </p>
       <div className="chips" role="group" aria-labelledby="pick-q">
         {GUESSES.map(([g, label]) => (
@@ -413,7 +413,7 @@ const WHY = [
 function WhyBlank({ why, setWhy, changed }: { why: number | null; setWhy: (i: number) => void; changed: number }) {
   const feedback = [
     'Yes. A connection’s change depends on what flowed through it, and nothing flowed from a blank pixel.',
-    'Not quite. Their strengths are as random as every other connection’s. They didn’t change because nothing flowed through them: a blank pixel sends 0.',
+    'Not quite. Their weights are as random as every other connection’s. They didn’t change because nothing flowed through them: a blank pixel sends 0.',
     `Not quite. This one correction changed ${thousands(changed)} numbers at once. Blank pixels’ connections were left out because nothing flowed through them.`,
   ]
   return (
@@ -470,7 +470,7 @@ function OneConnection({ c, one }: { c: Correction; one: Connection }) {
           <span className="fv mono">{fmt(after)}</span>
         </div>
         <p className="body">
-          This is the strength of the connection from the pixel at row {row}, column {col} to neuron {name} in hidden layer
+          This is the weight of the connection from the pixel at row {row}, column {col} to neuron {name} in hidden layer
           1: the outlined line in the diagram. It went {after > before ? 'up' : 'down'} by{' '}
           <span className="mono">{fmt(Math.abs(after - before))}</span>, so that pixel now pushes neuron {name}{' '}
           {after > before ? (after > 0 ? 'up a little more' : 'down a little less') : after < 0 ? 'down a little more' : 'up a little less'}.

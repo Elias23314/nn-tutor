@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { forward, predict } from '../engine/network'
 import { fmt, thousands } from '../playground/connection'
 import { NetworkDiagram } from '../playground/NetworkDiagram'
@@ -35,7 +35,7 @@ const RUNGS: Rung[] = [
     question: 'What changes inside it when it learns?',
     name: 'How it works',
     tag: 'No math',
-    blurb: 'Layer 1 ends with practice fixing a wrong guess. This slows down one round of practice to show what changes inside: its connection strengths.',
+    blurb: 'Part 1 shows practice turning a wrong guess into a right one. This slows down one round of practice to show what changes inside: its weights.',
     route: 'layer-2',
   },
   {
@@ -43,15 +43,15 @@ const RUNGS: Rung[] = [
     question: 'How much should one connection change?',
     name: 'With numbers',
     tag: 'Arithmetic',
-    blurb: 'Layer 2 shows that connections change a little. This works out which way and how far, for one connection: find the slope, then take a step.',
+    blurb: 'Part 2 shows that connections change a little. This works out, with plain arithmetic, which way and how far one connection should change.',
     route: 'layer-3',
   },
   {
     n: '4',
     question: 'How does it get that number without nudging?',
     name: 'The math',
-    tag: 'Calc I',
-    blurb: 'Layer 3 finds one slope by nudging. This shows how the network gets every slope at once, exactly, with the chain rule.',
+    tag: 'Calculus',
+    blurb: 'Part 3 works out one connection by trial and error. This shows the shortcut that works out every connection at once.',
     route: 'layer-4',
   },
   {
@@ -67,24 +67,23 @@ const RUNGS: Rung[] = [
 const QUESTIONS = [
   {
     q: 'Why can AI (neural networks) confuse two things that are drastically different?',
-    a: 'A neural network learns patterns by making its mistakes on labeled examples as small as possible. It doesn’t have common sense the way people do, so if two very different things share similar shapes or patterns, it can mix them up.',
-    where: 'Layers 2 and 3 show how it shrinks its mistakes',
+    a: 'A neural network is shown thousands of examples with the right answer attached, and it adjusts itself until it gets most of them right. It only learns whatever patterns help it do that. It has no common sense the way people do, so if two very different things share similar shapes or patterns, it can mix them up.',
+    where: 'Parts 2 and 3, which show how it shrinks its mistakes',
   },
   {
     q: 'Why is the data we train a neural network on important?',
     a: 'The data is where the network learns its patterns. Bad data teaches it the wrong patterns. Biased data does too: a network trained to recognize faces using only photos of white men learns to recognize white men’s faces, but struggles to generalize to everyone else.',
-    where: 'Try it in the playground: remove or relabel its examples',
+    where: 'The playground, where you can remove or relabel its examples',
   },
   {
     q: 'How can a machine learn when nobody tells it the rules?',
-    a: 'Nobody writes rules for what a 7 looks like. The network starts with random connection strengths, guesses, and is told how wrong it was. Each mistake nudges its connection strengths a little in the direction that would have made the mistake smaller. Repeat that thousands of times and the patterns emerge on their own.',
-    where: 'Layers 2 and 3 walk through exactly how',
+    a: 'Nobody writes rules for what a 7 looks like. The network starts with random weights, guesses, and is told how wrong it was. Each mistake nudges its weights a little in the direction that would have made the mistake smaller. Repeat that thousands of times and the patterns emerge on their own.',
+    where: 'Parts 2 and 3, step by step',
   },
 ]
 
 export function Start() {
-  const [calculus, setCalculus] = useState<'no' | 'yes' | null>(null)
-  // Layers 1 and 2 define the words layers 3 and 4 use, so everyone starts at layer 1.
+  // Parts 1 and 2 define the words parts 3 and 4 use, so everyone starts at part 1.
   const recommended: Route = 'layer-1'
 
   return (
@@ -94,19 +93,19 @@ export function Start() {
           <h1>How does a machine learn?</h1>
           <p className="lede">
             Let&rsquo;s dive into one of the core components of AI literacy: how machines learn. By the end of this guided
-            experience, you should be able to describe the process by which neural networks learn new information with
-            minimal human input.
+            experience, you should be able to describe how a neural network learns to recognize things when people give it
+            examples with the right answers attached, but nobody writes the rules.
           </p>
           <div className="btns" style={{ marginTop: 32 }}>
             <a className="btn big" href={href('layer-1')}>
-              Start with layer 1 (no math)
+              Start with part 1 (no math)
             </a>
             <a className="lnk" href={href('playground')}>
               Skip to the playground
             </a>
           </div>
           <p className="small" style={{ marginTop: 14 }}>
-            The playground works best after layer 1.
+            The playground works best after part 1.
           </p>
         </div>
         <HeroNetwork />
@@ -118,7 +117,9 @@ export function Start() {
           <div className="panel question" key={x.q}>
             <div className="h3">{x.q}</div>
             <p className="body">{x.a}</p>
-            <span className="small where">{x.where}</span>
+            <p className="small where">
+              <span className="k">Covered in</span> {x.where}
+            </p>
           </div>
         ))}
       </div>
@@ -127,8 +128,8 @@ export function Start() {
         <div>
           <h2>Choose how deep to go</h2>
           <p className="body intro">
-            Every layer follows the same network reading the same handwritten 7. Each one picks up where the last
-            stopped and goes one level deeper, so take them in order. You can stop after any layer and still have a
+            Every part follows the same network reading the same handwritten 7. Each one picks up where the last
+            stopped and goes one level deeper, so take them in order. You can stop after any part and still have a
             complete picture at that depth.
           </p>
           <ol className="rungs">
@@ -150,7 +151,7 @@ export function Start() {
                   </div>
                   {r.route ? (
                     <a className={`btn${isRecommended ? '' : ' sec sm'}`} href={href(r.route)}>
-                      {isRecommended ? `Start ${r.n === 'P' ? 'the playground' : `layer ${r.n}`}` : 'Open'}
+                      {isRecommended ? `Start ${r.n === 'P' ? 'the playground' : `part ${r.n}`}` : 'Open'}
                     </a>
                   ) : (
                     <span className="small soon-note">Coming soon</span>
@@ -159,28 +160,6 @@ export function Start() {
               )
             })}
           </ol>
-        </div>
-
-        <div className="panel unsure">
-          <div className="h3" id="calc-q">
-            Not sure where to start?
-          </div>
-          <p className="body">Have you taken calculus?</p>
-          <div className="chips" role="group" aria-labelledby="calc-q">
-            <button className="chip" aria-pressed={calculus === 'no'} onClick={() => setCalculus('no')}>
-              Not yet
-            </button>
-            <button className="chip" aria-pressed={calculus === 'yes'} onClick={() => setCalculus('yes')}>
-              Yes
-            </button>
-          </div>
-          <p className="small" style={{ fontSize: 15 }} aria-live="polite">
-            {calculus === 'yes'
-              ? 'Still start at layer 1. Layers 1 and 2 are short, need no math, and set up the words that layers 3 and 4 use. Layer 3 brings in arithmetic and layer 4 uses Calc I, so you’ll get all the way to the chain rule.'
-              : calculus === 'no'
-                ? 'Start at layer 1. Layers 1 and 2 need no math and layer 3 only uses arithmetic. Layer 4 uses calculus, but you can stop after layer 3 and still understand how it learns.'
-                : 'Pick one and we’ll tell you how far the layers will take you. You can move between layers from the ladder at the top of every page.'}
-          </p>
         </div>
       </div>
     </main>
@@ -201,7 +180,7 @@ function HeroNetwork() {
         <HeroDiagram state={status.state} seven={status.samples[7]} />
       ) : (
         <div className="panel hero-wait">
-          {status.kind === 'error' ? `Couldn’t start the network: ${status.message}` : 'Loading 70,000 handwritten digits…'}
+          {status.kind === 'error' ? `Couldn’t start the network: ${status.message}` : 'Loading 70,000 handwritten digits: 60,000 for it to practice on, and 10,000 kept aside to test it on digits it has never seen…'}
         </div>
       )}
     </div>
@@ -215,15 +194,17 @@ function HeroDiagram({ state, seven }: { state: Snapshot; seven: Float32Array })
   return (
     <NetworkDiagram
       title={null}
+      legend={false}
       network={state.network}
       fwd={fwd}
       caption={
         <>
-          The same network appears on every page: 784 pixels in, two layers of 16 neurons, ten outputs.{' '}
+          A picture goes in on the left as 784 pixels and ten scores come out on the right, one for each digit 0&ndash;9.
+          The biggest score is its guess. Part 1 explains every part.{' '}
           <span aria-live="polite">
             {done
-              ? `Here it reads a 7 after practice: it says ${guess} (${fmt(fwd.yHat[guess], 2)}).`
-              : `It’s practicing right now, round ${thousands(state.round)} of ${thousands(ONE_PASS)}. For this 7 it says ${guess} (${fmt(fwd.yHat[guess], 2)}).`}
+              ? `Here it reads a 7 after practice: its biggest score is ${guess} (${fmt(fwd.yHat[guess], 2)} out of 1).`
+              : `It’s practicing right now, round ${thousands(state.round)} of ${thousands(ONE_PASS)}. For this 7 its biggest score is ${guess} (${fmt(fwd.yHat[guess], 2)} out of 1).`}
           </span>
         </>
       }
