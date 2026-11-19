@@ -114,6 +114,8 @@
   background: var(--card);
   color: var(--ink);
   border-color: var(--btn-line);
+  /* "sec" here means a secondary button, not the section spacing class of the same name. */
+  margin-top: 0;
 }
 .btn.sm {
   height: 36px;

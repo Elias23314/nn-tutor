@@ -11,7 +11,7 @@ export interface Connection {
 export const G_TO_7: Connection = { layer: 2, from: 6, to: 7 }
 
 export function sourceName(c: Connection): string {
-  if (c.layer === 0) return `pixel (${Math.floor(c.from / IMAGE_SIDE) + 1}, ${(c.from % IMAGE_SIDE) + 1})`
+  if (c.layer === 0) return `pixel at row ${Math.floor(c.from / IMAGE_SIDE) + 1}, column ${(c.from % IMAGE_SIDE) + 1}`
   return neuronName(c.layer === 1 ? 1 : 2, c.from)
 }
 

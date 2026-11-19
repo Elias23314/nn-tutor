@@ -35,7 +35,6 @@ export function Layer3() {
         name="With numbers"
         tag="Arithmetic"
         title="How much should one connection change?"
-        soFar="One round of practice is guess, measure the mistake, adjust. Adjusting changes the weights that played a part in the mistake, a little, in the direction that makes the mistake smaller."
         lede="But which direction is that, and how big should the change be? This page works it out, with arithmetic, for a single connection."
         loopOn={['Find the slope', 'Take a step']}
         loopCaption="Part 2’s “Adjust” is really two parts: find the slope, then take a step"
@@ -45,6 +44,7 @@ export function Layer3() {
         after="."
         options={['the examples', 'weights', 'the rules']}
         answer="weights"
+        recap="One round of practice is guess, measure the mistake, adjust. Adjusting changes the weights that played a part in the mistake, a little, in the direction that makes the mistake smaller."
       />
       {status.kind === 'loading' && <p className="notice">Loading its training examples…</p>}
       {status.kind === 'error' && (

@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react'
-import { LayerHead, QuickCheck, RightIcon, SayItCard, WrongIcon } from '../components/LayerParts'
+import { Bridge, LayerHead, QuickCheck, RightIcon, SayItCard, WrongIcon } from '../components/LayerParts'
 import { DEFAULT_SEED, IMAGE_SIDE, PIXELS, createNetwork, neuronName, predict } from '../engine/network'
 import { fmt, thousands, type Connection } from '../playground/connection'
 import { NetworkDiagram, type Mark } from '../playground/NetworkDiagram'
@@ -25,16 +25,16 @@ export function Layer2() {
         name="How it works"
         tag="No math"
         title="What changes inside it when it learns?"
-        soFar="A neural network turns a picture into numbers, passes them through layers of neurons, and its biggest output is its guess. At the end of part 1, practice turned a wrong guess into a right one."
         lede="So what is practice? One small routine, repeated thousands of times: show it a digit along with the right answer, see what it guesses, measure how wrong it was, and adjust. This page slows down a single round."
         loop={ROUND}
         loopCaption="One round of practice. The replay below walks through it."
       />
       <QuickCheck
         before="A neural network turns a picture into "
-        after=", passes them through layers of neurons, and its biggest output is its guess."
+        after=", sends them along weighted connections through layers of neurons, and its biggest output is its guess."
         options={['rules', 'numbers', 'words']}
         answer="numbers"
+        recap="A neural network turns a picture into numbers, sends them along weighted connections through layers of neurons, and its biggest output is its guess. At the end of part 1, practice turned a wrong guess into a right one."
       />
       {status.kind === 'loading' && <p className="notice">Loading its training examples…</p>}
       {status.kind === 'error' && (
@@ -89,12 +89,15 @@ function Ready({ example }: { example: Float32Array }) {
   return (
     <>
       <p className="body l2-note">
-        This {LABEL} is one of the 60,000 examples it practices on, so it&rsquo;s a different {LABEL} from part 1&rsquo;s.
-        Every one of those examples comes with the right answer attached: that is what &ldquo;labeled&rdquo; meant in
-        part 1. The network here hasn&rsquo;t practiced at all yet.
+        Below we see a network whose input is a handwritten {LABEL}. This network hasn&rsquo;t practiced at all yet.
+        Let&rsquo;s look at how the network can get better at correctly identifying this {LABEL} through
+        &ldquo;training&rdquo;.
       </p>
 
-      <div className="grid2">
+      <Concepts />
+
+      <div className="grid2 l2-round">
+        <div className="l2-diagram" id="l2-diagram">
         <NetworkDiagram
           title="The network during this round"
           network={c.start}
@@ -107,6 +110,7 @@ function Ready({ example }: { example: Float32Array }) {
           marks={marks}
           caption={<span aria-live="polite">{caption}</span>}
         />
+        </div>
 
         <div className="stack">
           <Replay c={c} step={step} setStep={setStep} locked={locked}>
@@ -146,8 +150,9 @@ function Ready({ example }: { example: Float32Array }) {
                   </>
                 ) : (
                   <>
-                    The blue tick is each output&rsquo;s goal, and the gap is how far the output is from it. The mistake
-                    sums up all ten gaps in one number: <span className="mono">{fmt(c.lossBefore)}</span>.
+                    The blue tick is each output&rsquo;s goal, and the gap is how far the output is from it. The cost
+                    function combines all ten gaps into one number, the mistake:{' '}
+                    <span className="mono">{fmt(c.lossBefore)}</span>.
                   </>
                 )}
               </p>
@@ -163,8 +168,20 @@ function Ready({ example }: { example: Float32Array }) {
           </div>
 
           <p className="body" aria-live="polite">
-            {guess === 'ink' ? 'You predicted it: only ' : 'Here is what happened: only '}
-            connections from the {c.inkPixels} pixels with ink changed. Not one connection from a blank pixel did.
+            {guess === 'ink' ? (
+              <>
+                You predicted it: only connections from the {c.inkPixels} pixels with ink changed. Not one connection from a
+                blank pixel did.
+              </>
+            ) : (
+              <>
+                {guess === 'blank'
+                  ? 'Not quite: it’s the opposite. Only '
+                  : 'Not quite. You predicted connections from both kinds of pixel would change, but only '}
+                connections from the {c.inkPixels} pixels with ink changed. Not one connection from a blank pixel did. The
+                question below gets at why.
+              </>
+            )}
           </p>
 
           <WhyBlank why={why} setWhy={setWhy} changed={c.changed} />
@@ -202,9 +219,11 @@ function Ready({ example }: { example: Float32Array }) {
               </div>
 
               <p className="body l2-scale">
-                <b>One correction is only a nudge.</b> This one happened to be enough to fix this {LABEL}, but a single
-                example can&rsquo;t teach it every digit. Practice is {thousands(1875)} rounds of this, each on 32 examples at once.
-                That is what turned part 1&rsquo;s &ldquo;before practice&rdquo; into its &ldquo;after practice&rdquo;.
+                <b>One correction is only a nudge</b>, and a single example can&rsquo;t teach it every digit. Real practice
+                repeats this round thousands of times. To go faster, each round looks at 32 digits together and makes one
+                correction that helps on all of them on average; {thousands(1875)} such rounds covers all 60,000 examples
+                once. That is what turned part 1&rsquo;s &ldquo;before practice&rdquo; into its &ldquo;after
+                practice&rdquo;.
               </p>
             </>
           )}
@@ -233,6 +252,51 @@ function Ready({ example }: { example: Float32Array }) {
         </a>
       </div>
     </>
+  )
+}
+
+/** The three ideas a round of practice rests on, before the replay shows them on one 7. */
+function Concepts() {
+  return (
+    <div className="l2-concepts">
+      <div className="panel">
+        <div className="h3" style={{ marginBottom: 10 }}>
+          <span className="fnum-lg">1</span> Labeled data: examples with the answer attached
+        </div>
+        <p className="body">
+          To practice, the network needs examples where the right answer is already known. Each picture comes with a{' '}
+          <b>label</b>: the digit a person said it is. This {LABEL} is one of 60,000 labeled digits. The network
+          doesn&rsquo;t see the label when it guesses; the label is used afterwards to check the guess.
+        </p>
+        <Bridge>Once it has guessed, the label tells us how wrong it was. That&rsquo;s step 2.</Bridge>
+      </div>
+
+      <div className="panel">
+        <div className="h3" style={{ marginBottom: 10 }}>
+          <span className="fnum-lg">2</span> The cost function: how wrong was it?
+        </div>
+        <p className="body">
+          The <b>cost function</b> compares two things: what the network guessed (its ten scores) and what it should have
+          said (1 for the labeled digit, 0 for the other nine). It turns the difference into one number, the{' '}
+          <b>cost</b>. We&rsquo;ll also call it the <b>mistake</b>. Far off: a big cost. Exactly right: 0. Practice is all
+          about making that number smaller.
+        </p>
+        <Bridge>The cost says how wrong it was. What it does about it is step 3.</Bridge>
+      </div>
+
+      <div className="panel">
+        <div className="h3" style={{ marginBottom: 10 }}>
+          <span className="fnum-lg">3</span> Changing the weights to lower the cost
+        </div>
+        <p className="body">
+          The only things the network can change are its weights, plus each neuron&rsquo;s <b>bias</b> (the starting number
+          a neuron adds to its total, from part 1). After each guess, every weight that helped
+          cause the mistake is nudged a little, in whichever direction would make the cost smaller. One nudge barely
+          changes anything; thousands of them, over thousands of labeled digits, is how its guesses get better.
+        </p>
+        <Bridge>Now watch one full round of this on the {LABEL} below.</Bridge>
+      </div>
+    </div>
   )
 }
 
@@ -268,8 +332,9 @@ function Replay({
       text: (
         <>
           Now the right answer is revealed: {LABEL}. That sets a goal for every output: 1 for the {LABEL}, and 0 for the
-          other nine. The <b>mistake</b> is one number that sums up how far all ten outputs are from their goals. 0 would
-          be perfect. Here it is <span className="mono">{fmt(c.lossBefore)}</span>.
+          other nine. The cost function combines how far all ten outputs are from their goals into one number, the{' '}
+          <b>mistake</b>. Big gaps count extra, so it isn&rsquo;t a simple total. 0 would be perfect. Here it is{' '}
+          <span className="mono">{fmt(c.lossBefore)}</span>.
           <span className="small" style={{ display: 'block', marginTop: 6 }}>
             (It&rsquo;s the average of the ten gaps, each squared. Part 3 uses that.)
           </span>
@@ -282,8 +347,13 @@ function Replay({
         <>
           Each weight that played a part in the mistake is changed a little, in the direction that would have
           made the mistake smaller. {thousands(c.changed)} of the network&rsquo;s {thousands(c.total)} adjustable numbers
-          changed; almost all of those numbers are weights (the rest are biases). Afterwards it says {c.guessAfter} for this{' '}
-          {LABEL}. This adjustment is called a <b>correction</b>.
+          changed. (Those {thousands(c.total)} are about 13,000 weights across all its layers, plus one bias for each of its
+          42 neurons.) Afterwards it says{' '}
+          {c.guessAfter} for this{' '}
+          {LABEL}. This adjustment is called a <b>correction</b>. But it&rsquo;s only one nudge: the {LABEL} output rose
+          from <span className="mono">{fmt(c.before.yHat[LABEL], 2)}</span> to{' '}
+          <span className="mono">{fmt(c.after.yHat[LABEL], 2)}</span>, still far from its goal of 1.
+          {c.guessAfter === LABEL ? ' Here it was just enough to tip the guess.' : ''}
         </>
       ),
     },
@@ -304,6 +374,14 @@ function Replay({
               <div>
                 <div className="tt">{s.title}</div>
                 {n <= step && <div className="tx">{s.text}</div>}
+                {n === step && (
+                  <button
+                    className="lnk l2-see"
+                    onClick={() => document.getElementById('l2-diagram')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                  >
+                    See it in the diagram ↓
+                  </button>
+                )}
                 {n === 2 && step >= 2 && children}
               </div>
             </li>

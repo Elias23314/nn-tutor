@@ -1,5 +1,6 @@
 // Layer 1: what a neural network is, and how a handwritten digit becomes the numbers it reads.
-import { useMemo, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { useMemo, useState, type KeyboardEvent } from 'react'
+import { Bridge } from '../components/LayerParts'
 import { IMAGE_SIDE, PIXELS, forward, neuronName, predict, type ForwardResult, type Network } from '../engine/network'
 import { fmt, thousands } from '../playground/connection'
 import { NetworkDiagram } from '../playground/NetworkDiagram'
@@ -49,15 +50,6 @@ const ROUTE: [string, string][] = [
   ['10 outputs', 'step 4'],
   ['Its guess', 'the biggest output'],
 ]
-
-/** The line at the end of a step that hands the reader on to the next one. */
-function Bridge({ children }: { children: ReactNode }) {
-  return (
-    <p className="bridge">
-      <span aria-hidden="true">↓</span> {children}
-    </p>
-  )
-}
 
 export function WhatIsIt({
   image,

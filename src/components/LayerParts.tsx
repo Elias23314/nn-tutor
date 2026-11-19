@@ -190,10 +190,28 @@ export function SayItCard({
   )
 }
 
-/** "Quick check from the last part": recall one word from the previous layer's sentence. */
-export function QuickCheck({ before, after, options, answer }: { before: string; after: string; options: string[]; answer: string }) {
+/**
+ * "Quick check from the last part": recall one word from the previous part's sentence. Answering it
+ * (or missing twice) reveals `recap`, what the earlier parts established, so the recap can't give the
+ * answer away beforehand.
+ */
+export function QuickCheck({
+  before,
+  after,
+  options,
+  answer,
+  recap,
+}: {
+  before: string
+  after: string
+  options: string[]
+  answer: string
+  recap: string
+}) {
   const [picked, setPicked] = useState<string | null>(null)
+  const [misses, setMisses] = useState(0)
   const right = picked === answer
+  const revealed = right || misses >= 2
   return (
     <div className="retr" role="group" aria-label="Quick check from the last part">
       <span className="k">Quick check from the last part</span>
@@ -207,16 +225,36 @@ export function QuickCheck({ before, after, options, answer }: { before: string;
             className={`chip${picked === o && right ? ' right' : ''}`}
             aria-pressed={picked === o}
             disabled={right}
-            onClick={() => setPicked(o)}
+            onClick={() => {
+              setPicked(o)
+              if (o !== answer && o !== picked) setMisses((m) => m + 1)
+            }}
           >
             {o}
           </button>
         ))}
       </div>
       <span className="small" aria-live="polite">
-        {picked === null ? '' : right ? 'Answered' : 'Not quite. Try another.'}
+        {picked === null || revealed ? '' : 'Not quite. Try another.'}
       </span>
+      {revealed && (
+        <p className="retr-recap" aria-live="polite">
+          {right ? <RightIcon /> : null}
+          <span>
+            <b>{right ? 'Right.' : `It was “${answer}”.`} So far:</b> {recap}
+          </span>
+        </p>
+      )}
     </div>
+  )
+}
+
+/** The line at the end of a step that hands the reader on to the next one. */
+export function Bridge({ children }: { children: ReactNode }) {
+  return (
+    <p className="bridge">
+      <span aria-hidden="true">↓</span> {children}
+    </p>
   )
 }
 

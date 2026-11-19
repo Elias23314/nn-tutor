@@ -191,6 +191,19 @@
 .retr .chip {
   height: 34px;
 }
+.retr-recap {
+  flex-basis: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line-2);
+  line-height: 1.5;
+}
+.retr-recap svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
 
 /* Replay steps */
 .steps {
@@ -573,4 +586,31 @@ a.btn {
   font-size: 15.5px;
   line-height: 1.5;
   color: var(--ink-3);
+}
+
+/* A numbered step heading, and the hand-off line that ends each step. */
+.fnum-lg {
+  display: inline-flex;
+  width: 26px;
+  height: 26px;
+  border-radius: 13px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 14px;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+  vertical-align: 2px;
+}
+.bridge {
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line-2);
+  font-size: 15.5px;
+  color: var(--ink-3);
+}
+.bridge > span {
+  color: var(--excite);
+  font-weight: 600;
+  margin-right: 4px;
 }

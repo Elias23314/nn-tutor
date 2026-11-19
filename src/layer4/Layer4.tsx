@@ -26,7 +26,6 @@ export function Layer4() {
         name="The math"
         tag="Calculus"
         title="How does it get that number without nudging?"
-        soFar="For one connection, the slope says which way to move and the learning rate says how far. In part 3 you found the slope by nudging the connection and watching the mistake."
         lede="Nudging 13,002 connections one at a time would be far too slow. The chain rule gives the slope exactly. A connection into an output has one path to the mistake; deeper connections add up many."
         loopOn={['Find the slope']}
         loopCaption="This layer finds the slope exactly"
@@ -36,6 +35,7 @@ export function Layer4() {
         after="."
         options={['bigger', 'smaller', 'zero']}
         answer="smaller"
+        recap="For one connection, the slope says which way to move and the learning rate says how far. In part 3 you found the slope by nudging the connection and watching the mistake."
       />
       {status.kind === 'loading' && <p className="notice">Loading its training examples…</p>}
       {status.kind === 'error' && (
@@ -782,7 +782,7 @@ function DeepPaths({ net, x }: { net: Network; x: Float32Array }) {
               { layer: 'out', index: path.k, label: path.k === LABEL ? 'goal 1' : 'goal 0' },
             ]}
             dimOthers
-            caption={`One of the 160 paths: pixel (${row}, ${col}) → ${j} → ${m} → output ${path.k} → the mistake.`}
+            caption={`One of the 160 paths: pixel at row ${row}, column ${col} → ${j} → ${m} → output ${path.k} → the mistake.`}
           />
           <div className="pathmath">
             <div className="sub">This path&rsquo;s product of local slopes</div>
