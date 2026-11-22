@@ -1,0 +1,240 @@
+/* Layer 4: vocabulary, the chain, paths. */
+.vocab {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.vcard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px;
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  background: var(--soft);
+  text-align: center;
+}
+.vcard .vw {
+  font-size: 15px;
+  color: var(--muted);
+}
+.vcard .va {
+  color: #a3a7ad;
+}
+.vcard .vt {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.pathsvg {
+  width: 100%;
+  height: auto;
+  display: block;
+  margin: 4px 0 8px;
+}
+
+.formula {
+  font-size: 15px;
+  line-height: 1.9;
+  overflow-wrap: anywhere;
+}
+.fac {
+  padding: 1px 4px;
+  border-radius: 4px;
+  cursor: default;
+}
+.fac.on {
+  background: #dbe6fd;
+  color: var(--excite);
+}
+.fac sup {
+  font-size: 10px;
+  margin-left: 1px;
+}
+.arith li.on {
+  background: #eef3fe;
+}
+.fnum {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 11.5px;
+  align-items: center;
+  justify-content: center;
+  margin-right: 2px;
+}
+.arith li.on .fnum {
+  background: var(--excite);
+}
+
+.place {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.place-row {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.deep {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 32px;
+}
+.ptable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+.ptable th {
+  text-align: left;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line-2);
+}
+.ptable td {
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line-3);
+}
+.ptable td:last-child,
+.ptable th:last-child {
+  text-align: right;
+}
+
+.zeros {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.zcard {
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.turn-box {
+  width: 96px;
+  border: none;
+  border-bottom: 2px solid var(--ink);
+  background: transparent;
+  font: inherit;
+  font-weight: 600;
+  padding: 0 4px;
+}
+.turn-box::placeholder {
+  color: #9aa0a6;
+}
+
+@media (max-width: 900px) {
+  .vocab {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .deep,
+  .zeros,
+  .place-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Deeper paths: clickable rows and the picked path's product. */
+.ptable.paths tbody tr {
+  cursor: pointer;
+}
+.ptable.paths tbody tr:hover {
+  background: var(--soft);
+}
+.ptable.paths tbody tr.on {
+  background: #eef3fe;
+  font-weight: 600;
+}
+.pathmath {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pf {
+  white-space: nowrap;
+}
+.pfv {
+  display: inline-flex;
+  flex-direction: column;
+}
+.pfl {
+  font-size: 10.5px;
+  color: var(--muted);
+  margin-left: 2px;
+}
+
+/* "Read the formula" walkthrough. */
+.walk {
+  border: 1.5px solid var(--ink);
+}
+.walk-dots {
+  list-style: none;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.walk-dots button {
+  width: 30px;
+  height: 30px;
+  border-radius: 15px;
+  border: 1.5px solid var(--btn-line);
+  background: var(--card);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+.walk-dots button.done {
+  background: #e9e7e1;
+  border-color: #e9e7e1;
+}
+.walk-dots button.on {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+.walk-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.walk-stage {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.stage-pill {
+  font-size: 12.5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+}
+.walk-formula {
+  font-size: 15.5px;
+  background: #eef3fe;
+  color: var(--ink);
+  border-left: 3px solid var(--excite);
+  padding: 10px 12px;
+  border-radius: 4px;
+  overflow-wrap: anywhere;
+}
+.panel-on {
+  border: 1.5px solid var(--excite);
+  box-shadow: 0 0 0 3px #dbe6fd;
+}

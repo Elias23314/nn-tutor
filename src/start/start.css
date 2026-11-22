@@ -1,0 +1,160 @@
+.start h2 {
+  font-size: 26px;
+  line-height: 1.25;
+  font-weight: 600;
+  letter-spacing: -0.006em;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 600fr) minmax(0, 576fr);
+  gap: 24px;
+  align-items: center;
+  padding: 64px 0 48px;
+}
+.hero h1 {
+  font-size: 64px;
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+.hero .lede {
+  font-size: 21px;
+  margin-top: 20px;
+}
+.btn.big {
+  height: 52px;
+  font-size: 17px;
+  padding: 0 22px;
+}
+.hero-net .panel {
+  padding: 20px;
+}
+.hero-wait {
+  min-height: 360px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.grid3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 18px;
+}
+.question {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.question .where {
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--line, #E3E5E8);
+  /* .where is also the layer heading's flex row; this is a plain note. */
+  display: block;
+  margin-bottom: 0;
+}
+.question .where .k {
+  font-family: var(--cond);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-right: 6px;
+}
+
+.choose {
+  margin-top: 56px;
+}
+.choose .intro {
+  margin: 8px 0 18px;
+  color: var(--ink-3);
+}
+.rungs {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.rungcard {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  gap: 18px;
+  align-items: center;
+  padding: 18px 20px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--card);
+}
+.rungcard.rec {
+  border: 1.5px solid var(--ink);
+  padding: 17.5px 19.5px;
+}
+.rungcard .num {
+  width: 36px;
+  height: 36px;
+  border-radius: 18px;
+}
+.rungcard.soon .num {
+  background: var(--rule);
+  color: var(--ink-3);
+}
+.rungcard .body-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.rungcard .row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.rungcard .name {
+  font-size: 15px;
+  font-weight: 500;
+}
+.rungcard .small {
+  font-size: 15px;
+}
+.rungcard .soon-note {
+  font-size: 14px;
+  white-space: nowrap;
+}
+.tag.dark {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+@media (max-width: 1100px) {
+  .hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .grid3 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 760px) {
+  .hero {
+    padding: 32px 0;
+  }
+  .hero h1 {
+    font-size: 42px;
+  }
+  .hero .lede {
+    font-size: 18px;
+  }
+  .rungcard {
+    grid-template-columns: 36px 1fr;
+    align-items: start;
+  }
+  .rungcard > :last-child {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
