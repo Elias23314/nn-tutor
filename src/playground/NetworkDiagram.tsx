@@ -160,14 +160,17 @@ export function NetworkDiagram({
     const gray = l.push === 0 || !isChanged(l.c)
     return (
       <g key={key} opacity={dimOthers && !emphasis ? 0.18 : 1}>
-        {emphasis && <line x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke="var(--ink)" strokeWidth={width(l) + 3} />}
+        {/* A soft halo marks an emphasized line without hiding its own color and dashes. */}
+        {emphasis && (
+          <line x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke="var(--ink)" strokeOpacity={0.16} strokeLinecap="round" strokeWidth={Math.max(width(l), 3) + 7} />
+        )}
         <line
           x1={l.x1}
           y1={l.y1}
           x2={l.x2}
           y2={l.y2}
           stroke={gray ? '#C9CBCF' : l.push > 0 ? 'var(--excite)' : 'var(--inhibit)'}
-          strokeWidth={width(l)}
+          strokeWidth={emphasis ? Math.max(width(l), 3) : width(l)}
           strokeOpacity={emphasis ? 1 : 0.85}
           strokeDasharray={!gray && l.push < 0 ? '5 3' : undefined}
         />
@@ -374,7 +377,7 @@ export function NetworkDiagram({
             `${changedDescription ?? `This correction changes the connections into the ${firingCounts[0]} firing neurons of hidden layer 1 from inked pixels, and leaves every connection that starts or ends at a silent neuron alone.`} `}
           {selected && selectedLine && (
             <>
-              {connectionLabel(selected)} has strength {fmt(strength(network, selected))} and{' '}
+              {connectionLabel(selected)} has weight {fmt(strength(network, selected))} and{' '}
               {selectedLine.push === 0
                 ? 'carries nothing for this digit, because its source is silent.'
                 : `pushes its target ${selectedLine.push > 0 ? 'up' : 'down'} by ${fmt(Math.abs(selectedLine.push))}.`}

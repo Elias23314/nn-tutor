@@ -68,7 +68,8 @@
   align-items: baseline;
 }
 .turn-in input {
-  width: 110px;
+  width: 150px;
+  margin-left: 10px;
   border: none;
   border-bottom: 2px solid var(--ink);
   background: transparent;
@@ -172,4 +173,14 @@
 }
 .arith li .k {
   font-weight: 600;
+}
+
+/* Stacked: find the slope and take a step come first, then the chart that pictures them. */
+@media (max-width: 1100px) {
+  .l3-math > .stack {
+    order: 1;
+  }
+  .l3-math > .sticky-col {
+    order: 2;
+  }
 }

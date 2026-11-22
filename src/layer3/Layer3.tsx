@@ -37,14 +37,14 @@ export function Layer3() {
         title="How much should one connection change?"
         lede="But which direction is that, and how big should the change be? This page works it out, with arithmetic, for a single connection."
         loopOn={['Find the slope', 'Take a step']}
-        loopCaption="Part 2’s “Adjust” is really two parts: find the slope, then take a step"
+        loopCaption="Part 2’s “Adjust” is really two parts: find the slope (which way, and how much, the mistake changes when you change one weight), then take a step the other way."
       />
       <QuickCheck
         before="Learning means changing "
         after="."
         options={['the examples', 'weights', 'the rules']}
         answer="weights"
-        recap="One round of practice is guess, measure the mistake, adjust. Adjusting changes the weights that played a part in the mistake, a little, in the direction that makes the mistake smaller."
+        recap="One round of practice is guess, measure the mistake with the cost function, adjust. Adjusting changes the weights that played a part in the mistake, a little, in the direction that makes the mistake smaller."
       />
       {status.kind === 'loading' && <p className="notice">Loading its training examples…</p>}
       {status.kind === 'error' && (
@@ -84,14 +84,18 @@ function Ready({ example }: { example: Float32Array }) {
   const name = connectionLabel(c)
   const firing = sourceActivity(start.fwd, c)
 
+  // Section 1's hand experiment has its own weight; sections 2 and 3 (and the chart) always start from w0.
+  const [handW, setHandW] = useState(w0)
   const [w, setW] = useState(w0)
   const [eta, setEta] = useState(DEFAULT_ETA)
   const [prediction, setPrediction] = useState<Direction | null>(null)
   const [locked, setLocked] = useState(false)
   const [steps, setSteps] = useState(0)
+  const [lastStep, setLastStep] = useState(0)
 
   const now = useMemo(() => measure(net, example, c, w), [net, example, c, w])
-  const shown = useMemo(() => withStrength(net, c, w), [net, c, w])
+  const hand = useMemo(() => measure(net, example, c, handW), [net, example, c, handW])
+  const shown = useMemo(() => withStrength(net, c, handW), [net, c, handW])
   // Only the focus connection is colored; every other one is held still.
   const heldStill = useMemo(() => {
     const g = zeroGradients(net)
@@ -108,13 +112,13 @@ function Ready({ example }: { example: Float32Array }) {
           <NetworkDiagram
             title={`${name} in focus`}
             network={shown}
-            fwd={now.fwd}
+            fwd={hand.fwd}
             top={1}
             selected={c}
             changed={heldStill}
             unchangedLabel="held still"
             changedDescription={`Only ${name} is free to change; every other connection is held still.`}
-            marks={[{ layer: 'out', index: LABEL, label: `says ${fmt(now.fwd.yHat[LABEL], 3)}\ngoal 1` }]}
+            marks={[{ layer: 'out', index: LABEL, label: `says ${fmt(hand.fwd.yHat[LABEL], 3)}\ngoal 1` }]}
             caption={`The outlined line is ${name}. Everything gray is held still, so you can see what this one connection does. Real practice changes them all at once.`}
           />
         </div>
@@ -123,10 +127,10 @@ function Ready({ example }: { example: Float32Array }) {
           name={name}
           source={source}
           firing={firing}
-          w={w}
+          w={handW}
           w0={w0}
-          setW={setW}
-          now={now}
+          setW={setHandW}
+          now={hand}
           start={start}
           prediction={prediction}
           setPrediction={setPrediction}
@@ -138,7 +142,7 @@ function Ready({ example }: { example: Float32Array }) {
 
       {locked && (
         <>
-          <div className="grid2 sec">
+          <div className="grid2 sec l3-math">
             <div className="sticky-col">
               <Downhill net={net} x={example} c={c} name={name} w0={w0} w={w} now={now} eta={eta} />
             </div>
@@ -153,13 +157,17 @@ function Ready({ example }: { example: Float32Array }) {
                 eta={eta}
                 setEta={setEta}
                 steps={steps}
+                lastStep={lastStep}
                 takeStep={() => {
-                  setW(w + stepFor(eta, now.slope))
+                  const s = stepFor(eta, now.slope)
+                  setW(w + s)
+                  setLastStep(s)
                   setSteps(steps + 1)
                 }}
                 startOver={() => {
                   setW(w0)
                   setSteps(0)
+                  setLastStep(0)
                 }}
               />
             </div>
@@ -235,6 +243,12 @@ function ByHand({
   const snap = (v: number) => w0 + Math.round((v - w0) / NUDGE) * NUDGE
   const moved = Math.abs(w - w0) > 1e-9
   const stronger = w > w0
+  // "The bigger picture" waits until the reader has moved the weight at least once.
+  const [tried, setTried] = useState(false)
+  const move = (v: number) => {
+    setW(v)
+    setTried(true)
+  }
   const better = now.mistake < start.mistake
   const box = (label: string, value: string, changed = false, goal?: string) => (
     <div className={`fbox${changed ? ' changed' : ''}`}>
@@ -277,7 +291,9 @@ function ByHand({
         {box('mistake', fmt(now.mistake, 5), moved)}
       </div>
       <p className="small" style={{ marginTop: 8 }}>
-        The changes on this page are tiny, so the mistake is shown to five decimal places.
+        The {LABEL} output doesn&rsquo;t take this push alone: it adds it to the pushes from the other 15 neurons in hidden
+        layer 2, plus its bias, then squeezes the total into a score between 0 and 1, as in part 1. That&rsquo;s why the
+        output moves less than the push does. Each nudge is tiny, so the mistake is shown to five decimal places.
       </p>
 
       <div className="l3-predict">
@@ -319,14 +335,14 @@ function ByHand({
       {locked && (
         <>
           <div className="hand" style={{ marginTop: 16 }}>
-            <button className="btn sec sm" aria-label={`Decrease the weight of ${name} by ${NUDGE}`} onClick={() => setW(snap(w - NUDGE))}>
+            <button className="btn sec sm" aria-label={`Decrease the weight of ${name} by ${NUDGE}`} onClick={() => move(snap(w - NUDGE))}>
               −
             </button>
             <div className="hand-val">
               <span className="mono">{fmt(w)}</span>
               <span className="small">Weight of {name}</span>
             </div>
-            <button className="btn sec sm" aria-label={`Increase the weight of ${name} by ${NUDGE}`} onClick={() => setW(snap(w + NUDGE))}>
+            <button className="btn sec sm" aria-label={`Increase the weight of ${name} by ${NUDGE}`} onClick={() => move(snap(w + NUDGE))}>
               +
             </button>
           </div>
@@ -338,14 +354,14 @@ function ByHand({
             step={NUDGE}
             value={w}
             aria-label={`Weight of ${name}`}
-            onChange={(e) => setW(Number(e.target.value))}
+            onChange={(e) => move(Number(e.target.value))}
           />
 
           <p className="body" style={{ marginTop: 8 }} aria-live="polite">
             {!moved ? (
               <>
                 Now test your prediction. Press <b>+</b> to raise the weight a little, or <b>−</b> to lower it, and
-                watch the boxes above. Each press moves the weight by {NUDGE}.
+                watch the boxes above. Each press moves the weight by {NUDGE}. For bigger moves, drag the slider.
               </>
             ) : (
               <>
@@ -360,11 +376,13 @@ function ByHand({
               </>
             )}
           </p>
+          {tried && (
           <p className="bigger">
             <b>The bigger picture:</b> this is 1 of the network&rsquo;s {thousands(13_002)} adjustable numbers. Part
             2&rsquo;s &ldquo;Adjust&rdquo; is what you just did, done automatically for every one of them: find which
-            direction makes the mistake smaller, and move that way. The parts below turn that into arithmetic.
+            direction makes the mistake smaller, and move that way. The steps below turn that into arithmetic.
           </p>
+          )}
         </>
       )}
     </div>
@@ -373,7 +391,10 @@ function ByHand({
 
 /** Part 2: turn "which way is better" into a number. */
 function FindSlope({ name, w, now }: { name: string; w: number; now: Measured }) {
-  const diff = now.nudged - now.mistake
+  // Show the mistakes to 6 decimals and divide exactly what is shown, so the sum checks out by hand.
+  const r6 = (v: number) => Math.round(v * 1e6) / 1e6
+  const diff = r6(r6(now.nudged) - r6(now.mistake))
+  const shownSlope = fmt(diff / NUDGE, 4)
   const down = now.slope < 0
   return (
     <div className="panel">
@@ -398,9 +419,9 @@ function FindSlope({ name, w, now }: { name: string; w: number; now: Measured })
           <span className="k">See the mistake change</span>
           <span className="v">
             <span className="mono">
-              {fmt(now.mistake, 5)} → {fmt(now.nudged, 5)}
+              {fmt(now.mistake, 6)} → {fmt(now.nudged, 6)}
             </span>
-            , a change of <span className="mono">{signed(diff, 5)}</span>
+            , a change of <span className="mono">{signed(diff, 6)}</span>
           </span>
         </li>
         <li>
@@ -409,7 +430,7 @@ function FindSlope({ name, w, now }: { name: string; w: number; now: Measured })
             slope = change in mistake ÷ change in weight
             <br />
             <span className="mono">
-              {signed(diff, 5)} ÷ {NUDGE} ≈ <b>{fmt(now.slope, 4)}</b>
+              {signed(diff, 6)} ÷ {NUDGE} = <b>{shownSlope}</b>
             </span>
           </span>
         </li>
@@ -426,11 +447,15 @@ function FindSlope({ name, w, now }: { name: string; w: number; now: Measured })
             <span>
               A nudge of <span className="mono">{h}</span> gives
             </span>
-            <span className="m">{fmt(s, 5)}</span>
+            <span className="m">
+              {fmt(s, 5)}
+              {h === NUDGE && ` (the ${shownSlope} above, with more digits)`}
+            </span>
           </div>
         ))}
         <p className="small" style={{ marginTop: 10 }}>
-          Smaller nudges get closer to the exact slope, <span className="mono">{fmt(now.exact, 5)}</span>. Part 4 shows how
+          Smaller nudges get closer to the exact slope, <span className="mono">{fmt(now.exact, 5)}</span>: the slope
+          you&rsquo;d measure with an infinitely small nudge. Part 4 shows how
           the network gets that exact value without nudging at all.
         </p>
       </details>
@@ -448,6 +473,7 @@ function TakeStep({
   eta,
   setEta,
   steps,
+  lastStep,
   takeStep,
   startOver,
 }: {
@@ -459,6 +485,8 @@ function TakeStep({
   eta: number
   setEta: (eta: number) => void
   steps: number
+  /** The step most recently taken, so it stays on screen after the formula moves on to the next one. */
+  lastStep: number
   takeStep: () => void
   startOver: () => void
 }) {
@@ -475,10 +503,17 @@ function TakeStep({
         steps.
       </p>
       <div className="l3-formula mono" aria-live="polite">
-        step = −(learning rate) × slope
+        next step = −(learning rate) × slope
         <br />
-        step = −({eta}) × ({fmt(now.slope, 4)}) = <b>{signed(step)}</b>
+        next step = −({eta}) × ({fmt(now.slope, 4)}) = <b>{signed(step)}</b>
       </div>
+      <p className="small" style={{ marginTop: 6 }}>
+        {now.slope < 0
+          ? 'The slope is negative, and minus a negative is a plus, so the weight goes up.'
+          : now.slope > 0
+            ? 'The slope is positive, so the minus makes the step negative: the weight goes down.'
+            : 'The slope is 0, so there is no step to take.'}
+      </p>
 
       <div className="sub" id="rate-q" style={{ marginTop: 16, marginBottom: 8 }}>
         Try a different learning rate
@@ -510,24 +545,25 @@ function TakeStep({
           </>
         ) : (
           <>
-            After {steps} step{steps === 1 ? '' : 's'}, the weight is <span className="mono">{fmt(w)}</span> and the
-            mistake is <span className="mono">{fmt(now.mistake, 5)}</span>, down from{' '}
-            <span className="mono">{fmt(start.mistake, 5)}</span>. The slope is now{' '}
+            You just stepped <span className="mono">{signed(lastStep)}</span>. After {steps} step{steps === 1 ? '' : 's'}, the weight is <span className="mono">{fmt(w)}</span> and the
+            mistake is <span className="mono">{fmt(now.mistake, 5)}</span>,{' '}
+            {now.mistake < start.mistake ? 'down' : now.mistake > start.mistake ? 'up' : 'no change'} from{' '}
+            <span className="mono">{fmt(start.mistake, 5)}</span> where it started. The slope is now{' '}
             <span className="mono">{fmt(now.slope, 4)}</span>
             {Math.abs(now.slope) < Math.abs(start.slope) ? ': flatter than before, so the next step is smaller.' : '.'}
           </>
         )}
       </p>
       <p className="callout" style={{ marginTop: 14 }}>
-        On this one connection, a bigger learning rate just gets there faster. In real practice all {thousands(13_002)}{' '}
-        numbers step at once, and steps that are too big overshoot and make the mistake worse. You can try a learning rate
-        of 40 in the playground.
+        On this one connection you won&rsquo;t see an overshoot: a bigger learning rate just gets there faster. In real
+        practice all {thousands(13_002)} numbers step at once, and steps that are too big overshoot and make the mistake
+        worse. Try a learning rate of 40 in the playground to see it.
       </p>
       <details className="l3-more">
         <summary>Why does this tutor use 2?</summary>
         <p className="small" style={{ marginTop: 8 }}>
-          The mistake is an average over ten outputs, so every slope comes out small. A learning rate of 2 makes up for
-          that.
+          The cost function from part 2 averages over all ten outputs, so every slope comes out small. A learning rate of
+          2 makes up for that.
         </p>
       </details>
     </div>
@@ -574,6 +610,9 @@ function Downhill({
   const half = 0.5
   const step = stepFor(eta, now.slope)
   const to = Math.min(hi, Math.max(lo, w + step))
+  // Draw the step arrow at least 14px long so its head stays visible; the key gives its true size.
+  const arrowDx = sx(to) - sx(w)
+  const arrowEnd = arrowDx === 0 ? sx(w) : sx(w) + Math.sign(arrowDx) * Math.max(14, Math.abs(arrowDx))
   // A key in the empty top-right corner, so labels never sit on the curve.
   const keyX = CW - PAD.r - 230
   const keyY = PAD.t + 6
@@ -586,6 +625,10 @@ function Downhill({
         Each point on the curve is the mistake for one weight of {name}, with everything else held still. Lower is
         better. The dot is where the connection is now, the dashed line shows the slope there, and the arrow is the step
         it would take: downhill.
+      </p>
+      <p className="body" style={{ marginBottom: 10 }}>
+        The mistake never gets near 0 here. Even with the {LABEL} output near 1, the other nine outputs are still far from
+        their goals, and this one connection can&rsquo;t fix them. That takes all the others moving too.
       </p>
       <svg
         viewBox={`0 0 ${CW} ${CH}`}
@@ -631,11 +674,11 @@ function Downhill({
               strokeWidth={2}
               strokeDasharray="5 3"
             />
-            {Math.abs(sx(to) - sx(w)) > 2 && (
+            {Math.abs(arrowDx) > 0.5 && (
               <line
                 x1={sx(w)}
                 y1={sy(now.mistake) - 14}
-                x2={sx(to)}
+                x2={arrowEnd}
                 y2={sy(now.mistake) - 14}
                 stroke="var(--ink)"
                 strokeWidth={1.6}
@@ -676,7 +719,8 @@ function YourTurn({ slope }: { slope: number }) {
   const [checked, setChecked] = useState<boolean | null>(null)
   const [flip, setFlip] = useState<Direction | null>(null)
   const answer = stepFor(TURN_RATE, slope)
-  const typed = Number(`0.${text.replace(/\D/g, '')}`)
+  // Accept the number however it's typed: 0.019, +0.019, .019 or 0,019.
+  const typed = Number(text.trim().replace(',', '.'))
   return (
     <div className="panel turn">
       <div className="h3">Your turn</div>
@@ -684,7 +728,7 @@ function YourTurn({ slope }: { slope: number }) {
         className="turn"
         onSubmit={(e) => {
           e.preventDefault()
-          if (text.trim()) setChecked(Math.abs(typed - answer) <= 0.0015)
+          if (text.trim()) setChecked(Number.isFinite(typed) && Math.abs(typed - answer) <= 0.0015)
         }}
       >
         <p className="body">
@@ -693,14 +737,14 @@ function YourTurn({ slope }: { slope: number }) {
         </p>
         <div className="turn-row">
           <label className="mono turn-in">
-            +0.
+            step =
             <input
-              inputMode="numeric"
+              inputMode="decimal"
               value={text}
-              placeholder="___"
-              aria-label={`The step at learning rate ${TURN_RATE}, digits after +0.`}
+              placeholder="e.g. 0.05"
+              aria-label={`The step at learning rate ${TURN_RATE}`}
               onChange={(e) => {
-                setText(e.target.value.replace(/[^\d]/g, '').slice(0, 5))
+                setText(e.target.value.slice(0, 10))
                 setChecked(null)
               }}
             />

@@ -138,10 +138,11 @@ export function WhatIsIt({
           </p>
           <ul className="intro-list body">
             <li>
-              <b>Hidden layer 1:</b> 16 neurons, each with a weighted connection from all 784 inputs.
+              <b>Hidden layer 1:</b> 16 neurons, named a to p, each with a weighted connection from all 784 inputs.
             </li>
             <li>
-              <b>Hidden layer 2:</b> 16 neurons, each with a weighted connection from all 16 neurons of hidden layer 1.
+              <b>Hidden layer 2:</b> 16 neurons, named A to P, each with a weighted connection from all 16 neurons of
+              hidden layer 1.
             </li>
           </ul>
           <p className="body" style={{ marginTop: 10 }}>
